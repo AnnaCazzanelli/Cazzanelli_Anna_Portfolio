@@ -213,23 +213,58 @@ onMounted(getIllustrations)
 .filter-btn.active { font-weight: 700; }
 
 /* --- HERO --- */
+/* --- HERO (DESKTOP) --- */
+.hero-container {
+  height: 350px;
+}
+
 .hero-image-container {
   background-image: url('/images/illustration/copertina/illustration_lightmode.png');
-  background-size: contain; background-repeat: no-repeat; background-position: right center;
-  transform: translateY(-8%);
+  background-size: contain; 
+  background-repeat: no-repeat; 
+  background-position: right center;
 }
+
 body.dark-mode .hero-image-container {
   background-image: url('/images/illustration/copertina/illustration_darkmode.png');
 }
 
-.header-content-wrapper {
-  position: absolute; top: 50%; width: 100%; transform: translateY(-50%); text-align: center;
-  padding-inline: var(--margin-desktop); box-sizing: border-box;
-}
+.header-content-wrapper h1 { font-size: 64pt; line-height: 1.1; color: var(--color-accent); }
 
+
+/* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
-  .header-content-wrapper { padding-inline: var(--margin-mobile); }
-  .header-content-wrapper h1 { font-size: 28pt; line-height: 1.2; }
+  .hero-container {
+    height: auto; 
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .hero-image-container {
+    position: relative; 
+    width: 100%;
+    height: 250px; 
+    background-position: center; 
+    background-size: contain;
+    margin-bottom: 20px;
+    transform: none; /* Rimuoviamo eventuali trasformazioni desktop */
+  }
+
+  .header-content-wrapper {
+    position: relative;
+    top: 0;
+    transform: none;
+    padding-inline: var(--margin-mobile);
+    margin-bottom: 40px;
+  }
+
+  .header-content-wrapper h1 { 
+    font-size: 28pt; 
+    line-height: 1.2;
+  }
+
+  .filters-wrapper { justify-content: flex-start; }
 }
 
 /* --- GRID --- */
