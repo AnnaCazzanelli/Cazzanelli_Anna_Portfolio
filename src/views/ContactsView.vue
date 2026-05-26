@@ -1,20 +1,16 @@
-<!-- src/pages/Contacts.vue -->
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { db } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import emailjs from '@emailjs/browser'
 
 /* Stato form */
 const email = ref('')
 const name = ref('')
 const message = ref('')
 
-/* ==========================================================================
-   Scroll iniziale
-   - Garantisce l’avvio view dall’inizio pagina
-   ========================================================================== */
+/* Scroll iniziale */
 window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-
 
 /* Honeypot anti-bot (deve restare vuoto) */
 const honeypot = ref('')
@@ -61,7 +57,6 @@ function preSubmit (e) {
     return
   }
 
-  /* Se honeypot valorizzato: probabile bot → non inviamo ma simuliamo successo */
   if (honeypot.value && honeypot.value.trim() !== '') {
     success.value = true
     email.value = ''
@@ -74,12 +69,13 @@ function preSubmit (e) {
   openConfirm()
 }
 
-/* Conferma: invio su Firestore */
+/* Conferma: invio su Firestore + Notifica Email Sicura con Chiave Privata */
 async function confirmSend () {
   loading.value = true
   errorMsg.value = ''
 
   try {
+    // 1. Salvataggio su Firebase
     const docRef = collection(db, 'contactMessages')
     await addDoc(docRef, {
       name: name.value.trim(),
@@ -90,6 +86,31 @@ async function confirmSend () {
       createdAt: serverTimestamp()
     })
 
+    // 2. Recupero dinamico di TUTTE le chiavi dal file .env.local
+    const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+    const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+    const privateKey = import.meta.env.VITE_EMAILJS_PRIVATE_KEY
+
+    // Controllo di sicurezza sulle variabili d'ambiente
+    if (!serviceId || !templateId || !publicKey || !privateKey) {
+      throw new Error("Configurazione EmailJS incompleta nel file delle variabili d'ambiente (.env.local).")
+    }
+
+    // Mappatura parametri per il template
+    const templateParams = {
+      from_name: name.value.trim(),
+      reply_to: email.value.trim(),
+      message_html: message.value.trim()
+    }
+
+    // 3. Invio a EmailJS passando l'oggetto di autenticazione completo richiesto dal tuo account
+    await emailjs.send(serviceId, templateId, templateParams, {
+      publicKey: publicKey,
+      privateKey: privateKey
+    })
+
+    // Se entrambi i passaggi riescono, mostriamo il successo
     success.value = true
 
     /* Reset campi */
@@ -99,6 +120,7 @@ async function confirmSend () {
     honeypot.value = ''
     closeConfirm()
   } catch (err) {
+    console.error("Errore durante l'invio:", err)
     errorMsg.value = err?.message || 'Invio non riuscito. Riprova.'
     closeConfirm()
   } finally {
@@ -119,7 +141,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <!-- HERO -->
   <section
     class="hero-container relative w-full h-[400px] overflow-hidden"
     role="region"
@@ -134,7 +155,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     </div>
   </section>
 
-  <!-- FORM -->
   <section class="contact-form-section" aria-labelledby="contact-form-title">
     <h2 id="contact-form-title">
       Per lavori su commissione, collaborazioni o altro
@@ -144,7 +164,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       Compila il form qui sotto, ti contatterò al più presto.
     </p>
 
-    <!-- Messaggi stato -->
     <p
       v-if="success"
       class="form-success"
@@ -160,7 +179,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <form class="contact-form" @submit="preSubmit" novalidate>
 
-      <!-- Honeypot nascosto -->
       <div class="hp-wrap" aria-hidden="true">
         <label for="hp">Lascia questo campo vuoto</label>
         <input
@@ -219,7 +237,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     </form>
   </section>
 
-  <!-- Modale di conferma con riepilogo -->
   <div
     v-if="showConfirm"
     class="modal-overlay"
@@ -235,7 +252,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         Controlla i dati e premi “Sì, invia”.
       </p>
 
-      <!-- Riepilogo campi -->
       <div class="recap">
         <div class="recap-row">
           <span class="recap-label">Email</span>
@@ -276,291 +292,44 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </template>
 
 <style scoped>
-/* Hero: container e immagine di sfondo (light/dark) */
-.hero-container {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  overflow: hidden;
-}
-
-.hero-image-container {
-  position: absolute;
-  inset: 0;
-  background-image: url('/images/contacts/contacts_lightmode.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: right center;
-  transform: translateY(-8%);
-}
-
-body.dark-mode .hero-image-container {
-  background-image: url('/images/contacts/contacts_darkmode.png');
-}
-/* Fine-tuning immagine hero */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .hero-image-container {
-    background-position: right center;
-    transform: translateY(-10%);
-    opacity: 0.95;
-  }
-}
-
-@media (max-width: 768px) {
-  .hero-image-container {
-    background-position: right top;
-    transform: translateY(-10%);
-    opacity: 0.9;
-  }
-}
-
-/* Titolo centrato verticalmente */
-.header-content-wrapper {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  transform: translateY(-50%);
-  text-align: center;
-  width: 100%;
-  padding-inline: var(--margin-desktop);
-  box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-  .header-content-wrapper {
-    padding-inline: var(--margin-mobile);
-  }
-}
-
-/* H1 responsivo su tablet/mobile */
-@media (max-width: 1024px) and (min-width: 769px) {
-  .header-content-wrapper h1 {
-    font-size: 40pt;
-    line-height: 50pt;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-content-wrapper h1 {
-    font-size: 28pt;
-    line-height: 36pt;
-  }
-}
-
-
-/* Sezione form */
-.contact-form-section {
-  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
-  max-width: 760px;
-  margin: 1rem auto 7rem;
-  padding: 2rem;
-  border: 1px solid var(--color-accent);
-}
-
-.contact-form-section h2 {
-  text-align: center;
-  margin: 0 0 0.5rem;
-  font-size: clamp(18px, 2vw, 22px);
-  color: var(--color-accent);
-}
-
-.form-lead {
-  text-align: center;
-  margin: 0 0 1rem;
-  font-family: var(--font-body);
-  font-size: clamp(13px, 1.4vw, 15px);
-  color: var(--color-text);
-}
-
-.contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 620px;
-  margin-inline: auto;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-label {
-  font: 600 14px/1.4 var(--font-body);
-  color: var(--color-text);
-}
-
-input,
-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-  border: 1px solid #ccc;
-  font: 400 16px/1.4 var(--font-body);
-  background: var(--color-surface);
-  color: var(--color-text);
-}
-
-input:focus,
-textarea:focus {
-  border-color: var(--color-accent);
-  outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
-}
-
-.primary-btn {
-  align-self: center;
-  background-color: var(--color-accent);
-  color: var(--color-surface);
-  font-weight: 700;
-  font-size: 14px;
-  padding: 10px 18px;
-  border: 1px solid currentColor;
-  border-radius: 0;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.primary-btn:hover {
-  background-color: var(--color-hover);
-}
-
-.primary-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* Honeypot invisibile */
-.hp-wrap {
-  position: absolute;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
-/* Responsive form */
-@media (max-width: 768px) {
-  .contact-form-section {
-    margin: 1.5rem auto 5rem;
-    padding: 1.25rem;
-  }
-  .contact-form {
-    max-width: 100%;
-  }
-}
-
-/* Messaggi stato */
-.form-success {
-  color: #1b7e3c;
-  text-align: center;
-  margin: 0 0 8px;
-}
-
-.form-error {
-  color: #b00020;
-  text-align: center;
-  margin: 0 0 8px;
-}
-
-/* Modale: overlay */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  place-items: center;
-  z-index: 1000;
-}
-
-/* Modale: card */
-.modal-card {
-  background: var(--color-surface);
-  color: var(--color-text);
-  border: 1px solid var(--color-accent);
-  width: min(92vw, 480px);
-  padding: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-}
-
-.modal-card h3 {
-  margin: 0 0 6px;
-  font: 800 20px/1.2 var(--font-heading);
-  color: var(--color-accent);
-}
-
-.modal-text {
-  margin: 0 0 12px;
-  font: 400 15px/1.6 var(--font-body);
-}
-
-/* Riepilogo dati */
-.recap {
-  border: 1px solid var(--color-accent);
-  padding: 10px;
-  margin: 0 0 12px;
-  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
-}
-
-.recap-row {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 8px;
-  align-items: start;
-}
-
-.recap-row + .recap-row {
-  margin-top: 8px;
-}
-
-.recap-label {
-  font: 700 13px/1.3 var(--font-body);
-  color: var(--color-accent);
-}
-
-.recap-value {
-  font: 400 14px/1.5 var(--font-body);
-  color: var(--color-text);
-  word-break: break-word;
-}
-
-.prewrap {
-  white-space: pre-wrap;
-}
-
-.recap-message .recap-value {
-  max-height: 160px;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-/* Azioni modale */
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.modal-btn {
-  padding: 8px 14px;
-  font: 700 14px/1 var(--font-body);
-  border: 1px solid currentColor;
-  background: transparent;
-  cursor: pointer;
-}
-
-.modal-btn.confirm {
-  background: var(--color-accent);
-  color: var(--color-surface);
-}
-
-.modal-btn.confirm:hover {
-  background: var(--color-hover);
-}
-
-.modal-btn.cancel:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
+.hero-container { position: relative; width: 100%; height: 400px; overflow: hidden; }
+.hero-image-container { position: absolute; inset: 0; background-image: url('/images/contacts/contacts_lightmode.png'); background-size: contain; background-repeat: no-repeat; background-position: right center; transform: translateY(-8%); }
+body.dark-mode .hero-image-container { background-image: url('/images/contacts/contacts_darkmode.png'); }
+@media (max-width: 1024px) and (min-width: 769px) { .hero-image-container { background-position: right center; transform: translateY(-10%); opacity: 0.95; } }
+@media (max-width: 768px) { .hero-image-container { background-position: right top; transform: translateY(-10%); opacity: 0.9; } }
+.header-content-wrapper { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); text-align: center; width: 100%; padding-inline: var(--margin-desktop); box-sizing: border-box; }
+@media (max-width: 768px) { .header-content-wrapper { padding-inline: var(--margin-mobile); } }
+@media (max-width: 1024px) and (min-width: 769px) { .header-content-wrapper h1 { font-size: 40pt; line-height: 50pt; } }
+@media (max-width: 768px) { .header-content-wrapper h1 { font-size: 28pt; line-height: 36pt; } }
+.contact-form-section { background-color: color-mix(in srgb, var(--color-accent) 10%, transparent); max-width: 760px; margin: 1rem auto 7rem; padding: 2rem; border: 1px solid var(--color-accent); }
+.contact-form-section h2 { text-align: center; margin: 0 0 0.5rem; font-size: clamp(18px, 2vw, 22px); color: var(--color-accent); }
+.form-lead { text-align: center; margin: 0 0 1rem; font-family: var(--font-body); font-size: clamp(13px, 1.4vw, 15px); color: var(--color-text); }
+.contact-form { display: flex; flex-direction: column; gap: 14px; max-width: 620px; margin-inline: auto; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+label { font: 600 14px/1.4 var(--font-body); color: var(--color-text); }
+input, textarea { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ccc; font: 400 16px/1.4 var(--font-body); background: var(--color-surface); color: var(--color-text); }
+input:focus, textarea:focus { border-color: var(--color-accent); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent); }
+.primary-btn { align-self: center; background-color: var(--color-accent); color: var(--color-surface); font-weight: 700; font-size: 14px; padding: 10px 18px; border: 1px solid currentColor; border-radius: 0; cursor: pointer; transition: background-color 0.2s ease; }
+.primary-btn:hover { background-color: var(--color-hover); }
+.primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.hp-wrap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+@media (max-width: 768px) { .contact-form-section { margin: 1.5rem auto 5rem; padding: 1.25rem; } .contact-form { max-width: 100%; } }
+.form-success { color: #1b7e3c; text-align: center; margin: 0 0 8px; }
+.form-error { color: #b00020; text-align: center; margin: 0 0 8px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: grid; place-items: center; z-index: 1000; }
+.modal-card { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-accent); width: min(92vw, 480px); padding: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
+.modal-card h3 { margin: 0 0 6px; font: 800 20px/1.2 var(--font-heading); color: var(--color-accent); }
+.modal-text { margin: 0 0 12px; font: 400 15px/1.6 var(--font-body); }
+.recap { border: 1px solid var(--color-accent); padding: 10px; margin: 0 0 12px; background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+.recap-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: start; }
+.recap-row + .recap-row { margin-top: 8px; }
+.recap-label { font: 700 13px/1.3 var(--font-body); color: var(--color-accent); }
+.recap-value { font: 400 14px/1.5 var(--font-body); color: var(--color-text); word-break: break-word; }
+.prewrap { white-space: pre-wrap; }
+.recap-message .recap-value { max-height: 160px; overflow: auto; padding-right: 4px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal-btn { padding: 8px 14px; font: 700 14px/1 var(--font-body); border: 1px solid currentColor; background: transparent; cursor: pointer; }
+.modal-btn.confirm { background: var(--color-accent); color: var(--color-surface); }
+.modal-btn.confirm:hover { background: var(--color-hover); }
+.modal-btn.cancel:hover { background: rgba(0, 0, 0, 0.06); }
 </style>
