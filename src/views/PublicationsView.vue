@@ -114,12 +114,7 @@ body.dark-mode .hero-image-container {
   z-index: 2;
 }
 
-.header-content-wrapper h1 { 
-  font-size: 64pt; 
-  line-height: 1.1; 
-  color: var(--color-accent); 
-  font-family: var(--font-display);
-}
+
 
 /* ==========================================================================
    STILI GRIGLIA & CARDS
