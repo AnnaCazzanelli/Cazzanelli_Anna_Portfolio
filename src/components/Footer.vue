@@ -107,7 +107,7 @@ import { RouterLink } from 'vue-router'
       <!-- Riga inferiore -->
       <div class="text-center">
         <p class="copyright">
-          © 2025 Anna Cazzanelli — Tutti i diritti riservati
+          © 2026 Anna Cazzanelli — Tutti i diritti riservati
         </p>
       </div>
     </div>
