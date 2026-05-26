@@ -71,12 +71,12 @@ watch(
     >
       <img
         v-if="isDarkMode"
-        src="/icone/icon-moon.svg"
+        src="/icone/icon-moon.svg" class="mode-icn"
         alt="Dark Mode"
       />
       <img
         v-else
-        src="/icone/icon-sun.svg"
+        src="/icone/icon-sun.svg" class="mode-icn"
         alt="Light Mode"
       />
     </button>
@@ -149,6 +149,13 @@ watch(
 .theme-toggle img {
   width: 28px;
   height: 28px;
+}
+
+
+.mode-icn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  color: var(--color-hover);
 }
 
 /* Icona hamburger */
