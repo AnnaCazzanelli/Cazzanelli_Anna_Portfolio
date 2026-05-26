@@ -24,13 +24,13 @@ const errorMsg = ref('')
 const showConfirm = ref(false)
 let lastActive = null
 
-function openConfirm () {
+function openConfirm() {
   lastActive = document.activeElement
   showConfirm.value = true
   document.documentElement.style.overflow = 'hidden'
 }
 
-function closeConfirm () {
+function closeConfirm() {
   showConfirm.value = false
   document.documentElement.style.overflow = ''
   if (lastActive && typeof lastActive.focus === 'function') {
@@ -39,7 +39,7 @@ function closeConfirm () {
 }
 
 /* User-Agent per diagnostica su Firestore */
-function getUserAgent () {
+function getUserAgent() {
   if (typeof navigator !== 'undefined' && navigator.userAgent) {
     return navigator.userAgent.slice(0, 512)
   }
@@ -47,7 +47,7 @@ function getUserAgent () {
 }
 
 /* Pre-submit: apre la conferma, non invia ancora */
-function preSubmit (e) {
+function preSubmit(e) {
   e.preventDefault()
   errorMsg.value = ''
   success.value = false
@@ -70,7 +70,7 @@ function preSubmit (e) {
 }
 
 /* Conferma: invio su Firestore + Notifica Email Sicura con Chiave Privata */
-async function confirmSend () {
+async function confirmSend() {
   loading.value = true
   errorMsg.value = ''
 
@@ -129,7 +129,7 @@ async function confirmSend () {
 }
 
 /* Escape per chiudere la modale */
-function onKeydown (ev) {
+function onKeydown(ev) {
   if (showConfirm.value && ev.key === 'Escape') {
     ev.preventDefault()
     closeConfirm()
@@ -141,16 +141,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <section
-    class="hero-container relative w-full h-[400px] overflow-hidden"
-    role="region"
-    aria-labelledby="page-title"
-  >
+  <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region" aria-labelledby="page-title">
     <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
 
     <div
-      class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]"
-    >
+      class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
       <h1 id="page-title">Contatti</h1>
     </div>
   </section>
@@ -164,12 +159,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       Compila il form qui sotto, ti contatterò al più presto.
     </p>
 
-    <p
-      v-if="success"
-      class="form-success"
-      role="status"
-      aria-live="polite"
-    >
+    <p v-if="success" class="form-success" role="status" aria-live="polite">
       ✅ Messaggio inviato, grazie! ti contatterò al più presto.
     </p>
 
@@ -181,70 +171,35 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <div class="hp-wrap" aria-hidden="true">
         <label for="hp">Lascia questo campo vuoto</label>
-        <input
-          id="hp"
-          v-model="honeypot"
-          type="text"
-          tabindex="-1"
-          autocomplete="off"
-        />
+        <input id="hp" v-model="honeypot" type="text" tabindex="-1" autocomplete="off" />
       </div>
 
       <div class="form-group">
         <label for="email">Email*</label>
-        <input
-          v-model="email"
-          type="email"
-          id="email"
-          required
-          inputmode="email"
-          autocomplete="email"
-          placeholder="La tua email"
-        />
+        <input v-model="email" type="email" id="email" required inputmode="email" autocomplete="email"
+          placeholder="La tua email" />
       </div>
 
       <div class="form-group">
         <label for="name">Nome*</label>
-        <input
-          v-model="name"
-          type="text"
-          id="name"
-          required
-          autocomplete="name"
-          placeholder="Il tuo nome"
-        />
+        <input v-model="name" type="text" id="name" required autocomplete="name" placeholder="Il tuo nome" />
       </div>
 
       <div class="form-group">
         <label for="message">Scrivi qui la tua richiesta*</label>
-        <textarea
-          v-model="message"
-          id="message"
-          rows="5"
-          required
-          placeholder="Scrivi qui la tua richiesta…"
-        ></textarea>
+        <textarea v-model="message" id="message" rows="5" required
+          placeholder="Scrivi qui la tua richiesta…"></textarea>
       </div>
 
-      <button
-        type="submit"
-        class="btn primary-btn"
-        :disabled="loading"
-      >
+      <button type="submit" class="btn primary-btn" :disabled="loading">
         <span v-if="!loading">Invia</span>
         <span v-else>Invio…</span>
       </button>
     </form>
   </section>
 
-  <div
-    v-if="showConfirm"
-    class="modal-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="confirm-title"
-    aria-describedby="confirm-desc"
-  >
+  <div v-if="showConfirm" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title"
+    aria-describedby="confirm-desc">
     <div class="modal-card" role="document">
       <h3 id="confirm-title">Confermi l'invio?</h3>
 
@@ -270,20 +225,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </div>
 
       <div class="modal-actions">
-        <button
-          class="btn modal-btn confirm"
-          @click="confirmSend"
-          :disabled="loading"
-        >
+        <button class="btn modal-btn confirm" @click="confirmSend" :disabled="loading">
           <span v-if="!loading">Sì, invia</span>
           <span v-else>Invio…</span>
         </button>
 
-        <button
-          class="btn modal-btn cancel"
-          @click="closeConfirm"
-          :disabled="loading"
-        >
+        <button class="btn modal-btn cancel" @click="closeConfirm" :disabled="loading">
           Annulla
         </button>
       </div>
@@ -292,44 +239,270 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </template>
 
 <style scoped>
-.hero-container { position: relative; width: 100%; height: 400px; overflow: hidden; }
-.hero-image-container { position: absolute; inset: 0; background-image: url('/images/contacts/contacts_lightmode.png'); background-size: contain; background-repeat: no-repeat; background-position: right center; transform: translateY(-8%); }
-body.dark-mode .hero-image-container { background-image: url('/images/contacts/contacts_darkmode.png'); }
-@media (max-width: 1024px) and (min-width: 769px) { .hero-image-container { background-position: right center; transform: translateY(-10%); opacity: 0.95; } }
-@media (max-width: 768px) { .hero-image-container { background-position: right top; transform: translateY(-10%); opacity: 0.9; } }
-.header-content-wrapper { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); text-align: center; width: 100%; padding-inline: var(--margin-desktop); box-sizing: border-box; }
-@media (max-width: 768px) { .header-content-wrapper { padding-inline: var(--margin-mobile); } }
-@media (max-width: 1024px) and (min-width: 769px) { .header-content-wrapper h1 { font-size: 40pt; line-height: 50pt; } }
-@media (max-width: 768px) { .header-content-wrapper h1 { font-size: 28pt; line-height: 36pt; } }
-.contact-form-section { background-color: color-mix(in srgb, var(--color-accent) 10%, transparent); max-width: 760px; margin: 1rem auto 7rem; padding: 2rem; border: 1px solid var(--color-accent); }
-.contact-form-section h2 { text-align: center; margin: 0 0 0.5rem; font-size: clamp(18px, 2vw, 22px); color: var(--color-accent); }
-.form-lead { text-align: center; margin: 0 0 1rem; font-family: var(--font-body); font-size: clamp(13px, 1.4vw, 15px); color: var(--color-text); }
-.contact-form { display: flex; flex-direction: column; gap: 14px; max-width: 620px; margin-inline: auto; }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
-label { font: 600 14px/1.4 var(--font-body); color: var(--color-text); }
-input, textarea { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #ccc; font: 400 16px/1.4 var(--font-body); background: var(--color-surface); color: var(--color-text); }
-input:focus, textarea:focus { border-color: var(--color-accent); outline: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent); }
-.primary-btn { align-self: center; background-color: var(--color-accent); color: var(--color-surface); font-weight: 700; font-size: 14px; padding: 10px 18px; border: 1px solid currentColor; border-radius: 0; cursor: pointer; transition: background-color 0.2s ease; }
-.primary-btn:hover { background-color: var(--color-hover); }
-.primary-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-.hp-wrap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-@media (max-width: 768px) { .contact-form-section { margin: 1.5rem auto 5rem; padding: 1.25rem; } .contact-form { max-width: 100%; } }
-.form-success { color: #1b7e3c; text-align: center; margin: 0 0 8px; }
-.form-error { color: #b00020; text-align: center; margin: 0 0 8px; }
-.modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: grid; place-items: center; z-index: 1000; }
-.modal-card { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-accent); width: min(92vw, 480px); padding: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); }
-.modal-card h3 { margin: 0 0 6px; font: 800 20px/1.2 var(--font-heading); color: var(--color-accent); }
-.modal-text { margin: 0 0 12px; font: 400 15px/1.6 var(--font-body); }
-.recap { border: 1px solid var(--color-accent); padding: 10px; margin: 0 0 12px; background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
-.recap-row { display: grid; grid-template-columns: 110px 1fr; gap: 8px; align-items: start; }
-.recap-row + .recap-row { margin-top: 8px; }
-.recap-label { font: 700 13px/1.3 var(--font-body); color: var(--color-accent); }
-.recap-value { font: 400 14px/1.5 var(--font-body); color: var(--color-text); word-break: break-word; }
-.prewrap { white-space: pre-wrap; }
-.recap-message .recap-value { max-height: 160px; overflow: auto; padding-right: 4px; }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-.modal-btn { padding: 8px 14px; font: 700 14px/1 var(--font-body); border: 1px solid currentColor; background: transparent; cursor: pointer; }
-.modal-btn.confirm { background: var(--color-accent); color: var(--color-surface); }
-.modal-btn.confirm:hover { background: var(--color-hover); }
-.modal-btn.cancel:hover { background: rgba(0, 0, 0, 0.06); }
+/* --- HERO (DESKTOP) --- */
+.hero-container {
+  height: 350px;
+}
+
+.hero-image-container {
+  background-image: url('/images/contacts/contacts_lightmode.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: right center;
+}
+
+body.dark-mode .hero-image-container {
+  background-image: url('/images/contacts/contacts_darkmode.png');
+}
+
+.header-content-wrapper h1 {
+  font-size: 64pt;
+  line-height: 1.1;
+  color: var(--color-accent);
+}
+
+/* --- RESPONSIVE MOBILE --- */
+@media (max-width: 768px) {
+  .hero-container {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .hero-image-container {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    background-position: center;
+    background-size: contain;
+    margin-bottom: 20px;
+    transform: none;
+    /* Rimuoviamo eventuali trasformazioni desktop */
+  }
+
+  .header-content-wrapper {
+    position: relative;
+    top: 0;
+    transform: none;
+    padding-inline: var(--margin-mobile);
+    margin-bottom: 40px;
+  }
+
+  .header-content-wrapper h1 {
+    font-size: 28pt;
+    line-height: 1.2;
+  }
+
+  .filters-wrapper {
+    justify-content: flex-start;
+  }
+}
+.contact-form-section {
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  max-width: 760px;
+  margin: 1rem auto 7rem;
+  padding: 2rem;
+  border: 1px solid var(--color-accent);
+}
+
+.contact-form-section h2 {
+  text-align: center;
+  margin: 0 0 0.5rem;
+  font-size: clamp(18px, 2vw, 22px);
+  color: var(--color-accent);
+}
+
+.form-lead {
+  text-align: center;
+  margin: 0 0 1rem;
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.4vw, 15px);
+  color: var(--color-text);
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 620px;
+  margin-inline: auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font: 600 14px/1.4 var(--font-body);
+  color: var(--color-text);
+}
+
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: 1px solid #ccc;
+  font: 400 16px/1.4 var(--font-body);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--color-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
+}
+
+.primary-btn {
+  align-self: center;
+  background-color: var(--color-accent);
+  color: var(--color-surface);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 18px;
+  border: 1px solid currentColor;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.primary-btn:hover {
+  background-color: var(--color-hover);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hp-wrap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .contact-form-section {
+    margin: 1.5rem auto 5rem;
+    padding: 1.25rem;
+  }
+
+  .contact-form {
+    max-width: 100%;
+  }
+}
+
+.form-success {
+  color: #1b7e3c;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.form-error {
+  color: #b00020;
+  text-align: center;
+  margin: 0 0 8px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-accent);
+  width: min(92vw, 480px);
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.modal-card h3 {
+  margin: 0 0 6px;
+  font: 800 20px/1.2 var(--font-heading);
+  color: var(--color-accent);
+}
+
+.modal-text {
+  margin: 0 0 12px;
+  font: 400 15px/1.6 var(--font-body);
+}
+
+.recap {
+  border: 1px solid var(--color-accent);
+  padding: 10px;
+  margin: 0 0 12px;
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+}
+
+.recap-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.recap-row+.recap-row {
+  margin-top: 8px;
+}
+
+.recap-label {
+  font: 700 13px/1.3 var(--font-body);
+  color: var(--color-accent);
+}
+
+.recap-value {
+  font: 400 14px/1.5 var(--font-body);
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.prewrap {
+  white-space: pre-wrap;
+}
+
+.recap-message .recap-value {
+  max-height: 160px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 8px 14px;
+  font: 700 14px/1 var(--font-body);
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+}
+
+.modal-btn.confirm {
+  background: var(--color-accent);
+  color: var(--color-surface);
+}
+
+.modal-btn.confirm:hover {
+  background: var(--color-hover);
+}
+
+.modal-btn.cancel:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
 </style>
