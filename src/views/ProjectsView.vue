@@ -23,14 +23,15 @@ onMounted(() => {
    Configurazione Categorie e Colori
    ========================================================================== */
 const CATEGORY_COLORS = {
-  'Visual Design': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
-  'Web Design':    { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
-  'Communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
-  'Case Studies':  { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
+  'visual Design': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
+  'web Design':    { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
+  'communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
+  'case Studies':  { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
+  'motion Design': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
   Other:           { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
-const filterOptions = ['All', 'Web Design', 'Visual Design', 'Communication', 'Case Studies'];
+const filterOptions = ['All', 'Web Design', 'Visual Design', 'Motion Design','Communication', 'Case Studies'];
 
 /* ==========================================================================
    Logica di Filtraggio e Stili
