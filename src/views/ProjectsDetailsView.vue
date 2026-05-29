@@ -181,7 +181,7 @@ const CATEGORY_COLORS = {
   'web design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
   'communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
   'case studies': { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
-  'motion design': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
+  'motion graphics': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
   'other': { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
