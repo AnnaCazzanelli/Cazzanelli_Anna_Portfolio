@@ -2,7 +2,7 @@
 import { RouterLink } from 'vue-router'
 import Handwave from '@/components/Handwave.vue'
 
-import {ref,computed,onMounted,nextTick,onBeforeUnmount, watch} from 'vue'
+import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch } from 'vue'
 
 import { db } from '@/firebase/config'
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
@@ -35,14 +35,14 @@ const projMaxIndex = computed(() =>
 const projPrevDisabled = computed(() => projIndex.value <= 0)
 const projNextDisabled = computed(() => projIndex.value >= projMaxIndex.value)
 
-async function fetchProjects () {
-  const q = 
-  query(
-    collection(db, 'projects'),
-    where('featured', '==', true),
-    orderBy('priority', 'asc'),
-    limit(4)
-  )
+async function fetchProjects() {
+  const q =
+    query(
+      collection(db, 'projects'),
+      where('featured', '==', true),
+      orderBy('priority', 'asc'),
+      limit(4)
+    )
   const snap = await getDocs(q)
   projects.value = snap.docs.map(d => ({
     firestoreId: d.id,
@@ -50,7 +50,7 @@ async function fetchProjects () {
   }))
 }
 
-function measureCarousel () {
+function measureCarousel() {
   const vp = projViewport.value
   const tr = projTrack.value
   if (!vp || !tr) return
@@ -74,21 +74,21 @@ function measureCarousel () {
   applyTransform()
 }
 
-function applyTransform () {
+function applyTransform() {
   const tr = projTrack.value
   if (!tr) return
   const step = cardWidth.value + CARD_GAP
   tr.style.transform = `translateX(${-projIndex.value * step}px)`
 }
 
-function prevProj () {
+function prevProj() {
   if (!projPrevDisabled.value) {
     projIndex.value -= 1
     applyTransform()
   }
 }
 
-function nextProj () {
+function nextProj() {
   if (!projNextDisabled.value) {
     projIndex.value += 1
     applyTransform()
@@ -106,14 +106,14 @@ const illNextDisabled = computed(() =>
   illSnapIndex.value >= Math.max(0, illSnaps.value.length - 1)
 )
 
-async function fetchIllustrations () {
-  const q = 
-  query(
-    collection(db, 'illustrations'),
-    where('featured', '==', true),
-    orderBy('priority', 'asc'),
-    limit(6)
-  )
+async function fetchIllustrations() {
+  const q =
+    query(
+      collection(db, 'illustrations'),
+      where('featured', '==', true),
+      orderBy('priority', 'asc'),
+      limit(6)
+    )
   const snap = await getDocs(q)
   illustrations.value = snap.docs.map(d => ({
     firestoreId: d.id,
@@ -121,7 +121,7 @@ async function fetchIllustrations () {
   }))
 }
 
-function measureIllCarousel () {
+function measureIllCarousel() {
   const vp = illViewport.value
   const tr = illTrack.value
   if (!vp || !tr) return
@@ -145,7 +145,7 @@ function measureIllCarousel () {
   applyIllTransform()
 }
 
-function nearestSnapIndex (value, snaps) {
+function nearestSnapIndex(value, snaps) {
   if (!snaps.length) return 0
   let best = 0
   let bestDist = Math.abs(snaps[0] - value)
@@ -159,21 +159,21 @@ function nearestSnapIndex (value, snaps) {
   return best
 }
 
-function applyIllTransform () {
+function applyIllTransform() {
   const tr = illTrack.value
   if (!tr || !illSnaps.value.length) return
   const offset = illSnaps.value[illSnapIndex.value] || 0
   tr.style.transform = `translateX(${-offset}px)`
 }
 
-function prevIll () {
+function prevIll() {
   if (!illPrevDisabled.value) {
     illSnapIndex.value -= 1
     applyIllTransform()
   }
 }
 
-function nextIll () {
+function nextIll() {
   if (!illNextDisabled.value) {
     illSnapIndex.value += 1
     applyIllTransform()
@@ -223,29 +223,14 @@ watch(illustrations, async () => {
 
 <template>
   <main class="bg-surface text-text pt-2 pb-16">
-    <!-- HERO -->
-    <section
-      class="hero mx-auto max-w-[1280px] px-desktop pt-8 pb-14 grid items-center gap-14"
-      role="region"
-      aria-labelledby="home-title"
-    >
+    <section class="hero mx-auto max-w-[1280px] px-desktop pt-8 pb-14 grid items-center gap-14" role="region"
+      aria-labelledby="home-title">
       <article class="min-w-0">
-        <h1
-          id="home-title"
-          class="title m-0 text-accent font-extrabold leading-[1.06] whitespace-nowrap mb-[clamp(36px,4.2vw,72px)]"
-        >
-          Ciao
+        <h1 id="home-title" class="title m-0 text-accent font-extrabold leading-[1.1] whitespace-nowrap">
+          Anna Cazzanelli
         </h1>
 
-        <h2
-          class="subtitle m-0 mb-[10px] font-bold leading-[1.22] whitespace-nowrap text-accent"
-        >
-          Sono Anna Cazzanelli
-        </h2>
-
-        <h3
-          class="role m-0 mb-[22px] font-normal leading-[1.28] whitespace-nowrap text-accent opacity-95"
-        >
+        <h3 class="role m-0 mb-[20px] font-normal leading-[1.28] uppercase whitespace-nowrap text-accent opacity-95">
           Digital Designer &amp; Illustratrice
         </h3>
 
@@ -253,12 +238,8 @@ watch(illustrations, async () => {
           Se vuoi saperne di più di me
         </p>
 
-        <RouterLink
-          to="/about"
-          class="cta hero-btn whitespace-nowrap"
-          aria-label="Vai alla pagina About per saperne di più su Anna Cazzanelli"
-          title="Scopri di più"
-        >
+        <RouterLink to="/about" class="cta hero-btn whitespace-nowrap"
+          aria-label="Vai alla pagina About per saperne di più su Anna Cazzanelli" title="Scopri di più">
           Clicca qui
         </RouterLink>
       </article>
@@ -268,22 +249,13 @@ watch(illustrations, async () => {
       </div>
     </section>
 
-    <!--  Carosello Progetti -->
-    <section
-      class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6 accent-divider"
-      role="region"
-      aria-labelledby="projects-title"
-    >
+    <section class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6 accent-divider" role="region"
+      aria-labelledby="projects-title">
       <h2 id="projects-title" class="section-title mt-5 mb-20 text-accent">
         Alcuni progetti di Digital Design
       </h2>
 
-      <div
-        v-if="loading"
-        class="opacity-70"
-        role="status"
-        aria-live="polite"
-      >
+      <div v-if="loading" class="opacity-70" role="status" aria-live="polite">
         Caricamento…
       </div>
 
@@ -291,38 +263,21 @@ watch(illustrations, async () => {
         {{ error }}
       </p>
 
-      <div
-        v-else
-        class="grid grid-cols-[48px_1fr_48px] items-center gap-2"
-        aria-label="Carosello progetti selezionati"
-      >
-        <button
-          class="nav"
-          type="button"
-          @click="prevProj"
-          :disabled="projPrevDisabled"
-          aria-label="Progetto precedente"
-          title="Precedente"
-        >
+      <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2" aria-label="Carosello progetti selezionati">
+        <button class="nav" type="button" @click="prevProj" :disabled="projPrevDisabled"
+          aria-label="Progetto precedente" title="Precedente">
           <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
         <div class="carousel-viewport" ref="projViewport">
           <div class="carousel-track" ref="projTrack">
-            <RouterLink
-              v-for="p in projects"
-              :key="p.firestoreId"
-              class="card"
+            <RouterLink v-for="p in projects" :key="p.firestoreId" class="card"
               :to="{ name: 'project-details', params: { id: p.firestoreId } }"
               :aria-label="`Apri progetto: ${p.title || p.firestoreId}`"
-              :title="`Apri progetto: ${p.title || 'Senza titolo'}`"
-            >
+              :title="`Apri progetto: ${p.title || 'Senza titolo'}`">
               <figure class="card-frame" aria-label="Anteprima progetto">
-                <img
-                  :src="p.img || p.main_image"
-                  :alt="p.title ? `Anteprima progetto: ${p.title}` : 'Anteprima progetto'"
-                  loading="lazy"
-                />
+                <img :src="p.img || p.main_image"
+                  :alt="p.title ? `Anteprima progetto: ${p.title}` : 'Anteprima progetto'" loading="lazy" />
               </figure>
 
               <h3 class="card-title">
@@ -332,47 +287,27 @@ watch(illustrations, async () => {
           </div>
         </div>
 
-        <button
-          class="nav"
-          type="button"
-          @click="nextProj"
-          :disabled="projNextDisabled"
-          aria-label="Prossimo progetto"
-          title="Successivo"
-        >
+        <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled" aria-label="Prossimo progetto"
+          title="Successivo">
           <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
-        <RouterLink
-          to="/projects"
-          class="cta-see-all"
-          aria-label="Vai alla pagina Progetti per vedere tutto"
-          title="Vedi tutti i progetti"
-        >
+        <RouterLink to="/projects" class="cta-see-all" aria-label="Vai alla pagina Progetti per vedere tutto"
+          title="Vedi tutti i progetti">
           <span>Scopri di più</span>
           <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
       </div>
     </section>
 
-    <!-- Carosello Illustrazioni -->
-    <section
-      class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6"
-      role="region"
-      aria-labelledby="illustrations-title"
-    >
+    <section class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6" role="region" aria-labelledby="illustrations-title">
       <h2 id="illustrations-title" class="section-title mt-5 mb-20 text-accent">
         Alcune illustrazioni
       </h2>
 
-      <div
-        v-if="loading"
-        class="opacity-70"
-        role="status"
-        aria-live="polite"
-      >
+      <div v-if="loading" class="opacity-70" role="status" aria-live="polite">
         Caricamento…
       </div>
 
@@ -380,60 +315,34 @@ watch(illustrations, async () => {
         {{ error }}
       </p>
 
-      <div
-        v-else
-        class="grid grid-cols-[48px_1fr_48px] items-center gap-2"
-        aria-label="Carosello illustrazioni selezionate"
-      >
-        <button
-          class="nav"
-          type="button"
-          @click="prevIll"
-          :disabled="illPrevDisabled"
-          aria-label="Illustrazione precedente"
-          title="Precedente"
-        >
+      <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2"
+        aria-label="Carosello illustrazioni selezionate">
+        <button class="nav" type="button" @click="prevIll" :disabled="illPrevDisabled"
+          aria-label="Illustrazione precedente" title="Precedente">
           <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
         <div class="carousel-viewport" ref="illViewport">
           <div class="carousel-track" ref="illTrack">
-            <RouterLink
-              v-for="i in illustrations"
-              :key="i.firestoreId"
-              class="card-illustration"
+            <RouterLink v-for="i in illustrations" :key="i.firestoreId" class="card-illustration"
               :to="{ name: 'illustration-details', params: { id: i.firestoreId } }"
               :aria-label="`Apri illustrazione: ${i.title || i.firestoreId}`"
-              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`"
-            >
-              <img
-                :src="i.img || i.main_image"
-                :alt="i.title ? `Anteprima illustrazione: ${i.title}` : 'Anteprima illustrazione'"
-                loading="lazy"
-              />
+              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`">
+              <img :src="i.img || i.main_image"
+                :alt="i.title ? `Anteprima illustrazione: ${i.title}` : 'Anteprima illustrazione'" loading="lazy" />
             </RouterLink>
           </div>
         </div>
 
-        <button
-          class="nav"
-          type="button"
-          @click="nextIll"
-          :disabled="illNextDisabled"
-          aria-label="Prossima illustrazione"
-          title="Successivo"
-        >
+        <button class="nav" type="button" @click="nextIll" :disabled="illNextDisabled"
+          aria-label="Prossima illustrazione" title="Successivo">
           <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
-        <RouterLink
-          to="/illustrations"
-          class="cta-see-all"
-          aria-label="Vai alla pagina Illustrazioni per vedere tutto"
-          title="Vedi tutte le illustrazioni"
-        >
+        <RouterLink to="/illustrations" class="cta-see-all" aria-label="Vai alla pagina Illustrazioni per vedere tutto"
+          title="Vedi tutte le illustrazioni">
           <span>Scopri di più</span>
           <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
@@ -467,15 +376,18 @@ watch(illustrations, async () => {
 
 @media (max-width: 600px) {
   .hero {
-    grid-template-columns: 1fr clamp(200px, 34vw, 260px);
-    gap: 26px;
+    grid-template-columns: 1fr clamp(140px, 34vw, 220px);
+    gap: 20px;
     scroll-margin-top: 64px;
+    padding-inline: var(--margin-mobile);
   }
 }
 
 /* Tipografia hero */
 .title {
-  font-size: clamp(140px, 17vw, 400px);
+  font-size: clamp(48px, 6.5vw, 84px);
+  margin-bottom: 16px;
+  /* Avvicinato ad h3 su desktop */
 }
 
 .subtitle {
@@ -496,14 +408,23 @@ watch(illustrations, async () => {
 
 /* Tuning hero mobile */
 @media (max-width: 600px) {
+  .title {
+    font-size: 34px !important;
+    margin-bottom: 4px !important;
+    /* Avvicinato di un bel po ad h3 su mobile */
+  }
+
   .subtitle {
     margin-bottom: 4px;
     line-height: 1.16;
   }
 
   .role {
-    margin-bottom: 12px;
-    line-height: 1.18;
+    font-size: 15px !important;
+    /* Ridotto di pochi punti per mobile */
+    margin-bottom: 16px;
+    line-height: 1.25;
+    white-space: nowrap !important;
   }
 
   .payoff {
@@ -525,31 +446,34 @@ watch(illustrations, async () => {
 
 @media (max-width: 1024px) {
   .hand-wrap {
-    width: clamp(280px, 34vw, 420px);
-        margin-top:80px;
-       margin-right:12px;
+    width: clamp(240px, 32vw, 360px);
+    /* Ridotta leggermente per evitare collisioni sui 606px */
+    margin-top: 140px;
+    /* Spostata più in giù */
+    margin-right: -10px;
+    /* Spostata più a destra */
   }
 }
 
 @media (max-width: 600px) {
-  .title {
-    font-size: clamp(118px, 17vw, 300px);
-  }
   .hand-wrap {
-    width: clamp(100px, 32vw, 260px);
-    margin-top:200px;
-    margin-right: -10px;
+    width: clamp(140px, 34vw, 220px);
+    margin-top: 150px;
+    /* Abbassata per raccordarsi alla correzione dei 480px */
+    margin-right: -20px;
+    /* Spostata più a destra */
   }
+}
 
- } 
 @media (max-width: 480px) {
   .hand-wrap {
-    width: clamp(130px, 32vw, 260px);
-    margin-top:240px;
-    margin-right: -20px;
+    width: clamp(140px, 34vw, 220px);
+    margin-top: 160px;
+    /* Mantenuta la tua correzione perfetta */
+    margin-right: -24px;
+    /* Mantenuta la tua correzione perfetta */
   }
-
-  }
+}
 
 
 /* CTA hero */
@@ -567,6 +491,13 @@ watch(illustrations, async () => {
     transform 0.08s ease,
     background-color 0.2s ease,
     color 0.2s ease;
+}
+
+@media (max-width: 600px) {
+  .cta {
+    padding: 12px 22px;
+    font-size: 15px;
+  }
 }
 
 .cta:hover {
@@ -604,6 +535,7 @@ watch(illustrations, async () => {
     margin-right: auto;
   }
 }
+
 .nav {
   width: 48px;
   height: 48px;
@@ -750,6 +682,4 @@ watch(illustrations, async () => {
   flex-shrink: 0;
   display: block;
 }
-
-
 </style>
