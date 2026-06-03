@@ -48,63 +48,37 @@ watch(
 
 <template>
   <header class="header">
-    <!-- Navigazione desktop -->
-    <nav
-      class="desktop-nav"
-      aria-label="Navigazione principale"
-    >
+    <nav class="desktop-nav" aria-label="Navigazione principale">
       <RouterLink to="/">Home</RouterLink>
       <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/publications">Pubblicazioni</RouterLink>
+      <RouterLink to="/publications">Pubblicazioni</RouterLink>
       <RouterLink to="/projects">Progetti</RouterLink>
       <RouterLink to="/illustrations">Illustrazioni</RouterLink>
       <RouterLink to="/contacts">Contatti</RouterLink>
-    
     </nav>
 
-    <!-- Toggle tema -->
-    <button
-      class="theme-toggle"
-      type="button"
-      @click="toggleDarkMode"
-      aria-label="Cambia tema"
-    >
-      <img
-        v-if="isDarkMode"
-        src="/icone/icon-moon.svg" class="mode-icn"
-        alt="Dark Mode"
-      />
-      <img
-        v-else
-        src="/icone/icon-sun.svg" class="mode-icn"
-        alt="Light Mode"
-      />
+    <button class="theme-toggle" type="button" @click="toggleDarkMode" aria-label="Cambia tema">
+      <img v-if="isDarkMode" src="/icone/icon-moon.svg" class="mode-icn" alt="Dark Mode" />
+      <img v-else src="/icone/icon-sun.svg" class="mode-icn" alt="Light Mode" />
     </button>
 
-    <!-- Icona hamburger -->
-    <div
-      class="menu-icon"
-      @click="toggleMobileMenu"
-      aria-label="Apri menu"
-    >
+    <div class="menu-icon" @click="toggleMobileMenu" aria-label="Apri menu">
       <span></span>
       <span></span>
       <span></span>
     </div>
 
-    <!-- Navigazione mobile -->
-    <nav
-      class="mobile-nav"
-      :class="{ 'is-open': isMobileMenuOpen }"
-      aria-label="Navigazione mobile"
-    >
+    <nav class="mobile-nav" :class="{ 'is-open': isMobileMenuOpen }" aria-label="Navigazione mobile">
+      <div class="close-menu-icon" @click="closeMobileMenu">
+        <img src="/icone/icon-cross.svg" alt="Chiudi menu" />
+      </div>
+
       <RouterLink to="/" @click="closeMobileMenu">Home</RouterLink>
       <RouterLink to="/about" @click="closeMobileMenu">About</RouterLink>
       <RouterLink to="/publications" @click="closeMobileMenu">Pubblicazioni</RouterLink>
       <RouterLink to="/projects" @click="closeMobileMenu">Progetti</RouterLink>
       <RouterLink to="/illustrations" @click="closeMobileMenu">Illustrazioni</RouterLink>
       <RouterLink to="/contacts" @click="closeMobileMenu">Contatti</RouterLink>
-    
     </nav>
   </header>
 </template>
@@ -129,6 +103,7 @@ watch(
   color: var(--color-text);
   margin-left: 20px;
 }
+
 .desktop-nav a:hover {
   color: var(--color-hover);
 }
@@ -146,11 +121,11 @@ watch(
   align-items: center;
   margin-left: 10px;
 }
+
 .theme-toggle img {
   width: 28px;
   height: 28px;
 }
-
 
 .mode-icn:hover {
   opacity: 1;
@@ -158,19 +133,38 @@ watch(
   color: var(--color-hover);
 }
 
-/* Icona hamburger */
+/* Icona hamburger ORIGINALE */
 .menu-icon {
   display: none;
   flex-direction: column;
   cursor: pointer;
   margin-left: 10px;
 }
+
 .menu-icon span {
   display: block;
   width: 25px;
   height: 3px;
   background-color: var(--color-text);
   margin: 5px 0;
+}
+
+/* Posizionamento e dimensioni della X */
+.close-menu-icon {
+  position: absolute;
+  top: 20px;
+  right: var(--margin-mobile);
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.close-menu-icon img {
+  width: 28px;
+  height: 28px;
 }
 
 /* Nav mobile (chiuso di default) */
@@ -183,9 +177,11 @@ watch(
   .desktop-nav {
     display: none;
   }
+
   .menu-icon {
     display: flex;
   }
+
   .mobile-nav {
     position: fixed;
     top: 0;
@@ -200,17 +196,21 @@ watch(
     transition: right 0.3s ease-in-out;
     z-index: 999;
   }
+
   .mobile-nav.is-open {
+    display: flex;
     right: 0;
   }
-  .mobile-nav a {
-    font-size: 28pt;
-    line-height: 36pt;
-    font-weight: 700;
-    text-decoration: none;
-    color: var(--color-text);
-    margin: 15px 0;
-  }
+
+.mobile-nav a {
+  font-size: 1.81rem;
+  line-height: 2.31rem;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--color-text);
+  margin: 15px 0;
+}
+
   .mobile-nav a:hover {
     color: var(--color-hover);
   }
