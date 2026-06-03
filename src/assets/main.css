@@ -21,8 +21,8 @@
   --color-hover: var(--color-hover-dark);
 
   /* Margini layout */
-  --margin-desktop: 40px;
-  --margin-mobile: 20px;
+  --margin-desktop: 20px;
+  --margin-mobile: 10px;
 
   /* Font */
   --font-heading: 'Neue Kabel', 'Montserrat', sans-serif;
