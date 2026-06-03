@@ -18,7 +18,7 @@ import { RouterLink } from 'vue-router'
 
     <!-- Testo introduttivo -->
     <p class="cta-text m-0 text-center opacity-90">
-      Per lavori su commissione, collaborazioni o altro...
+      Per lavori su commissione, collaborazioni...
     </p>
 
     <!-- Pulsante principale -->
@@ -33,43 +33,6 @@ import { RouterLink } from 'vue-router'
       Contattami ora
     </RouterLink>
 
-    <!-- Link secondari -->
-    <div class="flex flex-wrap justify-center gap-6 font-medium">
-      <a
-        href="mailto:info@example.com"
-        class="cta-link"
-        aria-label="Scrivimi una email"
-        title="Scrivimi una email"
-      >
-        Email <span class="sr-only"> – apri il client di posta</span>
-      </a>
-      <RouterLink
-        to="/publications"
-        class="cta-link"
-        aria-label="Vai alla sezione pubblicazioni"
-        title="Vai alla sezione pubblicazioni"
-      >
-        Pubblicazioni <span class="sr-only"> – Vai alla sezione pubblicazioni</span>
-      </RouterLink>
-
-      <RouterLink
-        to="/projects"
-        class="cta-link"
-        aria-label="Vai alla sezione progetti"
-        title="Vai alla sezione progetti"
-      >
-        Progetti <span class="sr-only"> – scopri i miei lavori</span>
-      </RouterLink>
-
-      <RouterLink
-        to="/illustrations"
-        class="cta-link"
-        aria-label="Vai alla sezione illustrazioni"
-        title="Vai alla sezione illustrazioni"
-      >
-        Illustrazioni <span class="sr-only"> – esplora le mie tavole</span>
-      </RouterLink>
-    </div>
   </section>
 </template>
 
