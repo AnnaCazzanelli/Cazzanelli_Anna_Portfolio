@@ -44,17 +44,17 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
        
 
         <p>
-          Ciao! Sono Anna Cazzanelli, illustratrice e digital designer.<br />
-          Dopo il diploma al Liceo Artistico <strong><em>A. Vittoria</em></strong> di Trento e la
-          laurea triennale in Nuove Tecnologie dell’Arte all’Accademia di Belle Arti
-          <strong><em>G. Cignaroli</em></strong> di Verona, ho recentemente conseguito la
-          laurea magistrale in Digital Design &amp; Communication alla
-          <strong><em>LABA </em></strong> Libera Accademia di Belle Arti di Brescia.
+          Mi presento, sono Anna Cazzanelli, illustratrice e digital communication designer. 
+          Diplomata nel 2018 in <strong>Arti Figurative</strong> presso il Liceo Artistico <em>A.Vittoria di Trento</em>. 
+          Ho successivamente conseguito la laurea triennale in <strong>Nuove Tecnologie dell’Arte</strong> all’Accademia di Belle Arti<em> G.
+          Cignaroli</em> di Verona.
+          <br/> A febbraio 2026 ho concluso il mio percorso accademico magistrale in <strong>Design & Communication</strong> alla <em>LABA, Libera Accademia di Belle Arti</em> di Brescia.
+
         </p>
 
         <p>
           Il mio percorso mi ha portata a sviluppare competenze che spaziano
-          dall’illustrazione editoriale alla progettazione digitale: dal design di
+          dall’illustrazione editoriale alla progettazione digitale, dal design di
           siti web e applicazioni, alla motion graphic, fino alla creazione di
           identità visive e strategie di comunicazione multimediale.
         </p>
@@ -62,8 +62,8 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         <p>
           In ogni progetto cerco di coniugare creatività e funzionalità, dando vita
           a soluzioni visive efficaci e coerenti con il contesto.<br />
-          Credo che il design sia soprattutto un linguaggio capace di raccontare
-          storie, costruire esperienze e generare connessioni autentiche.
+          All'interno di questo sito portfolio, potrai esplorare una selezione dei lavori più significativi e rappresentativi della mia produzione creativa e professionale.
+
         </p>
       </article>
     </section>
