@@ -43,7 +43,7 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
        
 
         <p>
-          Mi presento, sono Anna Cazzanelli, illustratrice e digital communication designer. 
+          Sono Anna Cazzanelli, illustratrice e digital communication designer. <br/>
           Diplomata nel 2018 in <strong>Arti Figurative</strong> presso il Liceo Artistico <em>A.Vittoria di Trento</em>. 
           Ho successivamente conseguito la laurea triennale in <strong>Nuove Tecnologie dell’Arte</strong> all’Accademia di Belle Arti<em> G.
           Cignaroli</em> di Verona.
@@ -59,7 +59,7 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
         </p>
 
         <p>
-          In ogni progetto cerco di coniugare creatività, funzionalità e accessibilità dando vita
+          In ogni progetto cerco di coniugare <strong>creatività</strong>, <strong>funzionalità</strong> e <strong>accessibilità</strong> dando vita
           a soluzioni visive efficaci e coerenti con il contesto.<br />
           All'interno di questo sito portfolio, potrai esplorare una selezione dei lavori più significativi e rappresentativi della mia produzione creativa e professionale.
 
