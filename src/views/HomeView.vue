@@ -230,16 +230,16 @@ watch(illustrations, async () => {
           Anna Cazzanelli
         </h1>
 
-        <h3 class="role m-0 mb-[20px] font-normal leading-[1.28] uppercase whitespace-nowrap text-accent opacity-95">
+        <h2 class="role m-0 mb-[20px] font-normal leading-[1.28] uppercase whitespace-nowrap text-accent ">
           Digital Designer &amp; Illustratrice
-        </h3>
+        </h2>
 
-        <p class="payoff mt-2 mb-4 opacity-90">
+        <p class="payoff mt-2 mb-4 ">
           Se vuoi saperne di più di me
         </p>
 
         <RouterLink to="/about" class="cta hero-btn whitespace-nowrap"
-          aria-label="Vai alla pagina About per saperne di più su Anna Cazzanelli" title="Scopri di più">
+          aria-label="Vai alla pagina About per saperne di più su di me" title="Scopri di più">
           Clicca qui
         </RouterLink>
       </article>
@@ -252,7 +252,7 @@ watch(illustrations, async () => {
     <section class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6 accent-divider" role="region"
       aria-labelledby="projects-title">
       <h2 id="projects-title" class="section-title mt-5 mb-20 text-accent">
-        Alcuni progetti di Digital Design
+        Alcuni Progetti Digitali
       </h2>
 
       <div v-if="loading" class="opacity-70" role="status" aria-live="polite">

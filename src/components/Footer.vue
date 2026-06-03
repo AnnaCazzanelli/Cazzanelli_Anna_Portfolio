@@ -36,24 +36,24 @@ import { RouterLink } from 'vue-router'
           <RouterLink
             to="/publications"
             class="footer-link hover:text-hover"
-            title="Publications"
+            title="Pubblicazioni"
           >Pubblicazioni</RouterLink>
           <RouterLink
             to="/projects"
             class="footer-link hover:text-hover"
-            title="Projects"
+            title="Progetti"
           >Progetti</RouterLink>
 
           <RouterLink
             to="/illustrations"
             class="footer-link hover:text-hover"
-            title="Illustrations"
+            title="Illustrazioni"
           >Illustrazioni</RouterLink>
 
           <RouterLink
             to="/contacts"
             class="footer-link hover:text-hover"
-            title="Contacts"
+            title="Contatti"
           >Contatti</RouterLink>
         </nav>
 

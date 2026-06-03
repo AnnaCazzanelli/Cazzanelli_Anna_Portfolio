@@ -5,10 +5,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { db } from '@/firebase/config'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { RouterLink } from 'vue-router'
 
 const projects = ref([])
-const loading  = ref(true)
-const error    = ref(null)
+const loading = ref(true)
+const error = ref(null)
 const activeFilter = ref('All')
 
 /* ==========================================================================
@@ -24,14 +25,14 @@ onMounted(() => {
    ========================================================================== */
 const CATEGORY_COLORS = {
   'Visual Design': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
-  'Web Design':    { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
+  'Web Design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
   'Communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
-  'Case Studies':  { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
+  'Case Studies': { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
   'Motion Graphics': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
-  Other:           { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
+  Other: { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
-const filterOptions = ['All', 'Web Design', 'Visual Design', 'Motion Graphics','Communication', 'Case Studies'];
+const filterOptions = ['All', 'Web Design', 'Motion Graphics', 'Communication', 'Visual Design', 'Case Studies'];
 
 /* ==========================================================================
    Logica di Filtraggio e Stili
@@ -76,7 +77,8 @@ function badgeStyle(category) {
    ========================================================================== */
 function ariaLabelFor(p) {
   const cat = p.category || 'Categoria non specificata'
-  return `Apri il progetto “${p.title}”. Categoria: ${cat}`
+  const tags = Array.isArray(p.tag) && p.tag.length ? `. Tag: ${p.tag.join(', ')}.` : ''
+  return `Apri il progetto “${p.title}”. Categoria: ${cat}${tags}`
 }
 
 function altFor(p) {
@@ -105,25 +107,23 @@ async function getProjects() {
   <main class="page-content" aria-labelledby="page-title">
     <div class="projects-container flex flex-col items-center py-4">
 
-      <section class="hero-container relative w-full overflow-hidden">
+      <section class="hero-container relative w-full overflow-hidden" role="region" aria-labelledby="page-title">
         <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
-        <div class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
+        <div
+          class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
           <h1 id="page-title">Progetti Digitali</h1>
         </div>
       </section>
 
-      <section class="filters-section w-full max-w-[1400px] px-[var(--margin-desktop)] mt-12 mb-16 text-center">
+      <section class="filters-section w-full max-w-[1400px] px-[var(--margin-desktop)] mt-12 mb-16 text-center"
+        role="region" aria-label="Sezione Filtri">
         <p class="filters-cta payoff mt-2 mb-6 opacity-90">Scegli l'ambito di tuo interesse</p>
         <div class="filters-scroll-wrapper">
-          <div class="filters-wrapper">
-            <button 
-              v-for="cat in filterOptions" 
-              :key="cat" 
-              @click="setFilter(cat)" 
-              class="filter-btn"
-              :class="{ 'active': activeFilter === cat }" 
-              :style="activeFilter === cat ? getFilterActiveStyle(cat) : {}"
-            >
+          <div class="filters-wrapper" role="group" aria-label="Filtri progetti per ambito">
+            <button v-for="cat in filterOptions" :key="cat" @click="setFilter(cat)" class="filter-btn"
+              :class="{ 'active': activeFilter === cat }" :style="activeFilter === cat ? getFilterActiveStyle(cat) : {}"
+              :aria-pressed="activeFilter === cat"
+              :aria-label="cat === 'All' ? 'Mostra tutti i progetti' : `Mostra progetti dell'ambito ${cat}`">
               {{ cat === 'All' ? 'Tutti i progetti' : cat }}
             </button>
           </div>
@@ -132,21 +132,22 @@ async function getProjects() {
 
       <p v-if="error" class="text-[#d00] my-2" role="alert">{{ error }}</p>
 
-      <section v-if="loading" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 max-w-[1400px] w-full mt-0 mb-12">
+      <section v-if="loading"
+        class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 max-w-[1400px] w-full mt-0 mb-12 px-[var(--margin-desktop)]"
+        role="status" aria-live="polite" aria-label="Caricamento progetti">
         <div v-for="n in 4" :key="n" class="project-item skeleton flex flex-col items-center">
           <div class="relative w-full aspect-[1200/800] bg-[var(--color-surface)] skeleton-box"></div>
           <div class="skeleton-line title"></div>
         </div>
       </section>
 
-      <section v-else class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 md:gap-y-20 max-w-[1400px] w-full mt-0 mb-12 px-[var(--margin-desktop)]">
-        <RouterLink
-          v-for="p in filteredProjects"
-          :key="p.firestoreId"
+      <section v-else
+        class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 md:gap-y-20 max-w-[1400px] w-full mt-0 mb-12 px-[var(--margin-desktop)]"
+        role="list" aria-label="Elenco dei progetti filtrati">
+        <RouterLink v-for="p in filteredProjects" :key="p.firestoreId"
           class="project-item no-underline text-inherit flex flex-col items-center text-center cursor-pointer outline-none"
-          :to="{ name: 'project-details', params: { id: p.firestoreId } }"
-          :aria-label="ariaLabelFor(p)"
-        >
+          :to="{ name: 'project-details', params: { id: p.firestoreId } }" :aria-label="ariaLabelFor(p)"
+          role="listitem">
           <figure class="relative w-full aspect-[1200/800] overflow-hidden bg-[var(--color-surface)] m-0">
             <img :src="p.img" :alt="altFor(p)" class="w-full h-full object-cover transition-transform duration-200" />
             <figcaption class="cat-badge" :style="badgeStyle(p.category)">
@@ -154,7 +155,8 @@ async function getProjects() {
             </figcaption>
           </figure>
           <h3 class="mt-4">{{ p.title }}</h3>
-          <ul v-if="p.tag?.length" class="list-none flex flex-wrap justify-center mt-2 gap-2 p-0">
+          <ul v-if="p.tag?.length" class="list-none flex flex-wrap justify-center mt-2 gap-2 p-0"
+            aria-label="Tag di progetto">
             <li v-for="tag in p.tag" :key="tag" class="tag pill" :style="badgeStyle(p.category)">
               {{ tag }}
             </li>
@@ -167,17 +169,53 @@ async function getProjects() {
 
 <style scoped>
 /* --- FILTRI --- */
-.filters-section { display: flex; flex-direction: column; align-items: center; }
-.filters-cta { font-family: var(--font-body); font-weight: 400; font-size: 1.1rem; }
-.filters-scroll-wrapper { width: 100%; overflow-x: auto; scrollbar-width: none; padding-block: 8px; }
-.filters-scroll-wrapper::-webkit-scrollbar { display: none; }
-.filters-wrapper { display: flex; flex-wrap: nowrap; justify-content: center; gap: 0.8rem; padding-inline: 10px; }
+.filters-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.filters-cta {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 1.1rem;
+}
+
+.filters-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: 8px;
+}
+
+.filters-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
+.filters-wrapper {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 0.8rem;
+  padding-inline: 10px;
+}
 
 .filter-btn {
-  background: transparent; border: none; font-family: var(--font-body); color: var(--color-accent);
-  font-size: 1rem; padding: 6px 14px; cursor: pointer; border-radius: 999px; transition: all 0.25s ease; white-space: nowrap;
+  background: transparent;
+  border: none;
+  font-family: var(--font-body);
+  color: var(--color-accent);
+  font-size: 1rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
-.filter-btn.active { font-weight: 700; }
+
+.filter-btn.active {
+  font-weight: 700;
+}
 
 /* --- HERO (DESKTOP) --- */
 .hero-container {
@@ -186,8 +224,8 @@ async function getProjects() {
 
 .hero-image-container {
   background-image: url('/images/projects/copertina/project_lightmode.png');
-  background-size: contain; 
-  background-repeat: no-repeat; 
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: right center;
 }
 
@@ -195,25 +233,29 @@ body.dark-mode .hero-image-container {
   background-image: url('/images/projects/copertina/project_darkmode.png');
 }
 
-.header-content-wrapper h1 { font-size: 64pt; line-height: 1.1; color: var(--color-accent); }
+.header-content-wrapper h1 {
+  font-size: 5.3rem;
+  line-height: 1.1;
+  color: var(--color-accent);
+}
 
 /* --- RESPONSIVE MOBILE --- */
 @media (max-width: 768px) {
   .hero-container {
-    height: auto; 
+    height: auto;
     display: flex;
     flex-direction: column;
     overflow: visible;
   }
 
   .hero-image-container {
-    position: relative; 
+    position: relative;
     width: 100%;
-    height: 250px; 
-    background-position: center; 
+    height: 250px;
+    background-position: center;
     background-size: contain;
     margin-bottom: 20px;
-    transform: none; /* Rimuoviamo eventuali trasformazioni desktop */
+    transform: none;
   }
 
   .header-content-wrapper {
@@ -224,23 +266,66 @@ body.dark-mode .hero-image-container {
     margin-bottom: 40px;
   }
 
-  .header-content-wrapper h1 { 
-    font-size: 28pt; 
+  .header-content-wrapper h1 {
+    font-size: 2.3rem;
     line-height: 1.2;
   }
 
-  .filters-wrapper { justify-content: flex-start; }
+  .filters-wrapper {
+    justify-content: flex-start;
+  }
 }
 
 /* --- CARDS & PILLS --- */
 .cat-badge {
-  position: absolute; top: 10px; left: 10px; padding: 7px 14px; border-radius: 999px;
-  font-size: 0.9rem; font-family: var(--font-body); line-height: 1; border: 1px solid currentColor;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  line-height: 1;
+  border: 1px solid currentColor;
 }
-.pill { padding: 7px 14px; border-radius: 999px; border: 1px solid currentColor; font-size: 0.9rem; line-height: 1; }
+
+.pill {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.9rem;
+  line-height: 1;
+}
 
 /* --- UTILS --- */
-@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 0.3; } 100% { opacity: 0.6; } }
-.skeleton-box { background: currentColor; opacity: 0.1; animation: pulse 1.6s infinite; }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.skeleton-box {
+  background: currentColor;
+  opacity: 0.1;
+  animation: pulse 1.6s infinite;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
 </style>

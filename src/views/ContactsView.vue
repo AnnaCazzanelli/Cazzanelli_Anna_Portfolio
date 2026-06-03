@@ -75,7 +75,6 @@ async function confirmSend() {
   errorMsg.value = ''
 
   try {
-    // 1. Salvataggio su Firebase
     const docRef = collection(db, 'contactMessages')
     await addDoc(docRef, {
       name: name.value.trim(),
@@ -86,34 +85,28 @@ async function confirmSend() {
       createdAt: serverTimestamp()
     })
 
-    // 2. Recupero dinamico di TUTTE le chiavi dal file .env.local
     const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
     const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
     const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
     const privateKey = import.meta.env.VITE_EMAILJS_PRIVATE_KEY
 
-    // Controllo di sicurezza sulle variabili d'ambiente
     if (!serviceId || !templateId || !publicKey || !privateKey) {
       throw new Error("Configurazione EmailJS incompleta nel file delle variabili d'ambiente (.env.local).")
     }
 
-    // Mappatura parametri per il template
     const templateParams = {
       from_name: name.value.trim(),
       reply_to: email.value.trim(),
       message_html: message.value.trim()
     }
 
-    // 3. Invio a EmailJS passando l'oggetto di autenticazione completo richiesto dal tuo account
     await emailjs.send(serviceId, templateId, templateParams, {
       publicKey: publicKey,
       privateKey: privateKey
     })
 
-    // Se entrambi i passaggi riescono, mostriamo il successo
     success.value = true
 
-    /* Reset campi */
     email.value = ''
     name.value = ''
     message.value = ''
@@ -141,101 +134,105 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region" aria-labelledby="page-title">
-    <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
+  <main class="page-content">
+    <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region"
+      aria-labelledby="page-title">
+      <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
 
-    <div
-      class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
-      <h1 id="page-title">Contatti</h1>
-    </div>
-  </section>
-
-  <section class="contact-form-section" aria-labelledby="contact-form-title">
-    <h2 id="contact-form-title">
-      Per lavori su commissione, collaborazioni o altro
-    </h2>
-
-    <p class="form-lead">
-      Compila il form qui sotto, ti contatterò al più presto.
-    </p>
-
-    <p v-if="success" class="form-success" role="status" aria-live="polite">
-      ✅ Messaggio inviato, grazie! ti contatterò al più presto.
-    </p>
-
-    <p v-if="errorMsg" class="form-error" role="alert">
-      ⚠️ {{ errorMsg }}
-    </p>
-
-    <form class="contact-form" @submit="preSubmit" novalidate>
-
-      <div class="hp-wrap" aria-hidden="true">
-        <label for="hp">Lascia questo campo vuoto</label>
-        <input id="hp" v-model="honeypot" type="text" tabindex="-1" autocomplete="off" />
+      <div
+        class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
+        <h1 id="page-title">Contatti</h1>
       </div>
+    </section>
 
-      <div class="form-group">
-        <label for="email">Email*</label>
-        <input v-model="email" type="email" id="email" required inputmode="email" autocomplete="email"
-          placeholder="La tua email" />
-      </div>
+    <section class="contact-form-section" role="region" aria-labelledby="contact-form-title">
+      <h2 id="contact-form-title">
+        Per lavori su commissione, collaborazioni o altro
+      </h2>
 
-      <div class="form-group">
-        <label for="name">Nome*</label>
-        <input v-model="name" type="text" id="name" required autocomplete="name" placeholder="Il tuo nome" />
-      </div>
-
-      <div class="form-group">
-        <label for="message">Scrivi qui la tua richiesta*</label>
-        <textarea v-model="message" id="message" rows="5" required
-          placeholder="Scrivi qui la tua richiesta…"></textarea>
-      </div>
-
-      <button type="submit" class="btn primary-btn" :disabled="loading">
-        <span v-if="!loading">Invia</span>
-        <span v-else>Invio…</span>
-      </button>
-    </form>
-  </section>
-
-  <div v-if="showConfirm" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title"
-    aria-describedby="confirm-desc">
-    <div class="modal-card" role="document">
-      <h3 id="confirm-title">Confermi l'invio?</h3>
-
-      <p id="confirm-desc" class="modal-text">
-        Controlla i dati e premi “Sì, invia”.
+      <p class="form-lead">
+        Compila il form qui sotto, ti contatterò al più presto.
       </p>
 
-      <div class="recap">
-        <div class="recap-row">
-          <span class="recap-label">Email</span>
-          <span class="recap-value">{{ email }}</span>
+      <p v-if="success" id="success-desc" class="form-success" role="status" aria-live="polite">
+        ✅ Messaggio inviato, grazie! ti contatterò al più presto.
+      </p>
+
+      <p v-if="errorMsg" id="error-desc" class="form-error" role="alert">
+        ⚠️ {{ errorMsg }}
+      </p>
+
+      <form class="contact-form" @submit="preSubmit" novalidate
+        :aria-describedby="success ? 'success-desc' : (errorMsg ? 'error-desc' : null)">
+        <div class="hp-wrap" aria-hidden="true">
+          <label for="hp">Lascia questo campo vuoto</label>
+          <input id="hp" v-model="honeypot" type="text" tabindex="-1" autocomplete="off" />
         </div>
 
-        <div class="recap-row">
-          <span class="recap-label">Nome</span>
-          <span class="recap-value">{{ name }}</span>
+        <div class="form-group">
+          <label for="email">Email*</label>
+          <input v-model="email" type="email" id="email" required aria-required="true" inputmode="email"
+            autocomplete="email" placeholder="La tua email" />
         </div>
 
-        <div class="recap-row recap-message">
-          <span class="recap-label">Messaggio</span>
-          <pre class="recap-value prewrap">{{ message }}</pre>
+        <div class="form-group">
+          <label for="name">Nome*</label>
+          <input v-model="name" type="text" id="name" required aria-required="true" autocomplete="name"
+            placeholder="Il tuo nome" />
         </div>
-      </div>
 
-      <div class="modal-actions">
-        <button class="btn modal-btn confirm" @click="confirmSend" :disabled="loading">
-          <span v-if="!loading">Sì, invia</span>
+        <div class="form-group">
+          <label for="message">Scrivi qui la tua richiesta*</label>
+          <textarea v-model="message" id="message" rows="5" required aria-required="true"
+            placeholder="Scrivi qui la tua richiesta…"></textarea>
+        </div>
+
+        <button type="submit" class="btn primary-btn" :disabled="loading">
+          <span v-if="!loading">Invia</span>
           <span v-else>Invio…</span>
         </button>
+      </form>
+    </section>
 
-        <button class="btn modal-btn cancel" @click="closeConfirm" :disabled="loading">
-          Annulla
-        </button>
+    <div v-if="showConfirm" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title"
+      aria-describedby="confirm-desc">
+      <div class="modal-card" role="document">
+        <h3 id="confirm-title">Confermi l'invio?</h3>
+
+        <p id="confirm-desc" class="modal-text">
+          Controlla i dati e premi “Sì, invia”.
+        </p>
+
+        <div class="recap">
+          <div class="recap-row">
+            <span class="recap-label">Email</span>
+            <span class="recap-value">{{ email }}</span>
+          </div>
+
+          <div class="recap-row">
+            <span class="recap-label">Nome</span>
+            <span class="recap-value">{{ name }}</span>
+          </div>
+
+          <div class="recap-row recap-message">
+            <span class="recap-label">Messaggio</span>
+            <pre class="recap-value prewrap">{{ message }}</pre>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn modal-btn confirm" @click="confirmSend" :disabled="loading">
+            <span v-if="!loading">Sì, invia</span>
+            <span v-else>Invio…</span>
+          </button>
+
+          <button class="btn modal-btn cancel" @click="closeConfirm" :disabled="loading">
+            Annulla
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
@@ -256,7 +253,7 @@ body.dark-mode .hero-image-container {
 }
 
 .header-content-wrapper h1 {
-  font-size: 64pt;
+  font-size: 5.3rem;
   line-height: 1.1;
   color: var(--color-accent);
 }
@@ -278,7 +275,6 @@ body.dark-mode .hero-image-container {
     background-size: contain;
     margin-bottom: 20px;
     transform: none;
-    /* Rimuoviamo eventuali trasformazioni desktop */
   }
 
   .header-content-wrapper {
@@ -290,7 +286,7 @@ body.dark-mode .hero-image-container {
   }
 
   .header-content-wrapper h1 {
-    font-size: 28pt;
+    font-size: 2.3rem;
     line-height: 1.2;
   }
 
@@ -298,6 +294,7 @@ body.dark-mode .hero-image-container {
     justify-content: flex-start;
   }
 }
+
 .contact-form-section {
   background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
   max-width: 760px;
@@ -504,5 +501,17 @@ textarea:focus {
 
 .modal-btn.cancel:hover {
   background: rgba(0, 0, 0, 0.06);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 </style>

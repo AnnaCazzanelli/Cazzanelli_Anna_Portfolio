@@ -33,11 +33,10 @@ const normKey = (u) => {
   return file.replace(/\.(webp|png|jpe?g|gif|avif)$/i, '')
 }
 
-/* Scroll iniziale */
 window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 
 /* ==========================================================================
-   Normalizzazione gallery e Immagini (Riconoscimento Automatico Video/Immagini)
+   Normalizzazione gallery e Immagini
    ========================================================================= */
 const galleryPairs = computed(() => {
   const g = project.value?.gallery
@@ -47,10 +46,7 @@ const galleryPairs = computed(() => {
       if (it && typeof it === 'object') {
         const hi = (it.high_res || '').trim()
         const lo = (it.low_res || '').trim()
-
-        // Verifica se l'URL appartiene a un video di YouTube
         const isVideo = hi.includes('youtube.com') || hi.includes('youtu.be')
-
         return {
           type: isVideo ? 'video' : 'image',
           hi,
@@ -174,7 +170,7 @@ const onTouchEnd = () => {
 }
 
 /* ==========================================================================
-   Gestione dei Colori Dinamici (Insensibile alle Maiuscole/Minuscole)
+   Gestione dei Colori Dinamici
    ========================================================================= */
 const CATEGORY_COLORS = {
   'visual design': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
@@ -186,7 +182,6 @@ const CATEGORY_COLORS = {
 }
 
 const tagStyle = computed(() => {
-  // Convertiamo la categoria in minuscolo per evitare errori di battitura tra codice e database
   const catNormalized = String(project.value?.category || '').trim().toLowerCase()
   const c = CATEGORY_COLORS[catNormalized] || CATEGORY_COLORS['other']
   return {
@@ -227,11 +222,11 @@ watch(() => route.params.id, fetchProject)
 <template>
   <main class="page bg-surface text-text">
 
-    <div v-if="loading" class="loading py-40 text-center opacity-80">
+    <div v-if="loading" class="loading py-40 text-center opacity-80" role="status" aria-live="polite">
       Caricamento progetto…
     </div>
 
-    <div v-else-if="notFound" class="notfound py-40 text-center opacity-80">
+    <div v-else-if="notFound" class="notfound py-40 text-center opacity-80" role="alert">
       <p>Progetto non trovato.</p>
       <RouterLink to="/projects" class="back-link text-accent">Torna ai progetti</RouterLink>
     </div>
@@ -242,15 +237,17 @@ watch(() => route.params.id, fetchProject)
         class="back-btn absolute -top-[60px] left-0 w-12 h-12 inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10"
         aria-label="Torna alla lista progetti" title="Torna alla lista progetti">
         <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6" />
+        <span class="sr-only">Torna alla lista progetti</span>
       </RouterLink>
 
       <h1 class="title text-accent text-center">{{ project.title }}</h1>
 
-      <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-6 mb-14">
+      <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-6 mb-14"
+        aria-label="Visualizzatore elementi del progetto">
 
         <button
           class="nav w-12 h-12 inline-flex items-center justify-center transition disabled:opacity-30 hover:bg-black/5 dark:hover:bg-white/10"
-          :disabled="activeIndex === 0" @click="prev" aria-label="Immagine precedente" title="Immagine precedente">
+          :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente" title="Elemento precedente">
           <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="w-6 h-6" />
         </button>
 
@@ -262,7 +259,7 @@ watch(() => route.params.id, fetchProject)
             allowfullscreen class="block w-full max-w-[1080px] aspect-video rounded-lg mx-auto"></iframe>
 
           <img v-else :src="images[activeIndex]?.src" :alt="images[activeIndex]?.alt"
-            class="stage-img block h-[clamp(360px,62vh,720px)] w-auto max-w-full object-contain" loading="eager" />
+            class="stage-img block h-[clamp(22.5rem,62vh,45rem)] w-auto max-w-full object-contain" loading="eager" />
         </div>
 
         <button
@@ -274,43 +271,64 @@ watch(() => route.params.id, fetchProject)
 
       </section>
 
-      <section v-if="thumbs.length > 1"
-        class="thumbs flex gap-4 overflow-x-auto scroll-smooth no-scrollbar mb-14 px-20">
+      <section v-if="thumbs.length > 1" class="thumbs flex gap-4 overflow-x-auto scroll-smooth no-scrollbar mb-14 px-20"
+        role="list" aria-label="Miniature della galleria">
         <button v-for="(t, i) in thumbs" :key="t.src + i"
           class="thumb flex-shrink-0 w-[112px] h-[112px] rounded-lg overflow-hidden border-2 transition opacity-70"
           :class="{ 'active opacity-100 border-[var(--color-accent)]': i === activeIndex }" @click="setActive(i)"
-          :aria-label="'Mostra elemento ' + (i + 1)" :title="'Mostra elemento ' + (i + 1)">
+          :aria-label="'Mostra immagine ' + (i + 1)" :title="'Mostra immagine ' + (i + 1)"
+          :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
           <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover" />
         </button>
       </section>
 
-      <section class="meta grid grid-cols-[1fr_2fr] gap-[72px] pt-10 border-t border-black/5 dark:border-white/5">
+      <section class="meta grid grid-cols-[1fr_2fr] gap-[72px] pt-10 border-t border-black/5 dark:border-white/5"
+        aria-label="Scheda informativa del progetto">
 
         <div class="col">
-          <h3 class="text-accent">Data</h3>
-          <p v-if="project.year">{{ project.year }}</p>
+          <dl class="meta-list">
+            <dt v-if="project.year">
+              <h2 class="meta-label">Data</h2>
+            </dt>
+            <dd v-if="project.year">
+              <p>{{ project.year }}</p>
+            </dd>
 
-          <h3 class="text-accent mt-6">Tipo di progetto</h3>
-          <p><span class="pill inline-block" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+            <dt>
+              <h2 class="meta-label">Tipo di progetto</h2>
+            </dt>
+            <dd>
+              <p><span class="pill inline-block" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+            </dd>
 
-          <h3 class="text-accent mt-6">Tag</h3>
-          <ul v-if="project.tag?.length" class="tags flex flex-wrap gap-3 list-none p-0">
-            <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">
-              {{ t }}
-            </li>
-          </ul>
+            <dt v-if="project.tag?.length">
+              <h2 class="meta-label">Tag</h2>
+            </dt>
+            <dd v-if="project.tag?.length">
+              <ul class="tags flex flex-wrap gap-3 list-none p-0" aria-label="Tag del progetto">
+                <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">
+                  {{ t }}
+                </li>
+              </ul>
+            </dd>
 
-          <h3 class="text-accent mt-6">Tecnica (Tools)</h3>
-          <p v-if="project.tools">{{ project.tools }}</p>
-          <p v-else class="opacity-50">Dati non disponibili</p>
+            <dt>
+              <h2 class="meta-label">Tecnica (Tools)</h2>
+            </dt>
+            <dd>
+              <p v-if="project.tools">{{ project.tools }}</p>
+              <p v-else class="opacity-50">Dati non disponibili</p>
+            </dd>
+          </dl>
         </div>
 
         <div class="col">
-          <h3 class="text-accent">Description:</h3>
+          <h2 class="meta-label">Descrizione</h2>
           <div v-if="project.description" class="desc leading-relaxed">
             <p v-html="project.description"></p>
             <div v-if="project.behance_url" class="mt-8">
-              <a :href="project.behance_url" target="_blank" rel="noopener noreferrer" class="behance-link">
+              <a :href="project.behance_url" target="_blank" rel="noopener noreferrer" class="behance-link"
+                aria-label="Scopri il video presentazione su Behance (apre una nuova scheda)">
                 <img src="/icone/icon-behance.svg" alt="" aria-hidden="true" class="w-4 h-4" />
                 <span>Scopri il video presentazione su Behance</span>
               </a>
@@ -325,7 +343,18 @@ watch(() => route.params.id, fetchProject)
 </template>
 
 <style scoped>
-/* Behance Style */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .behance-link {
   display: inline-flex;
   align-items: center;
@@ -333,20 +362,19 @@ watch(() => route.params.id, fetchProject)
   color: var(--color-accent);
   text-decoration: underline;
   transition: color 0.2s ease;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .behance-link:hover {
   color: var(--color-hover);
 }
 
-/* Layout */
 .page {
   padding: 48px var(--margin-desktop) 112px;
 }
 
 .title {
-  font-size: clamp(32px, 4.2vw, 56px);
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
   line-height: 1.1;
   margin: 56px 0 48px;
 }
@@ -360,16 +388,21 @@ watch(() => route.params.id, fetchProject)
   scrollbar-width: none;
 }
 
-/* Tipografia Meta */
-.meta h3 {
-  font-size: clamp(20px, 1.9vw, 24px);
+.meta-list {
+  margin: 0;
+  padding: 0;
+}
+
+.meta-label {
+  font-size: clamp(1.25rem, 1.9vw, 1.5rem);
   margin-bottom: 12px;
   font-weight: 700;
+  color: var(--color-accent);
 }
 
 .desc p,
-.col p {
-  font-size: clamp(15px, 1.05vw, 18px);
+.meta-list dd p {
+  font-size: clamp(0.93rem, 1.05vw, 1.12rem);
   line-height: 1.8;
   margin-bottom: 14px;
   white-space: pre-line;
@@ -383,7 +416,6 @@ watch(() => route.params.id, fetchProject)
   border: 1px solid currentColor;
 }
 
-/* Responsiveness */
 @media (max-width: 768px) {
   .page {
     padding: 32px var(--margin-mobile) 96px;
@@ -394,7 +426,15 @@ watch(() => route.params.id, fetchProject)
   }
 
   .nav {
-    display: none;
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
   }
 
   .meta {

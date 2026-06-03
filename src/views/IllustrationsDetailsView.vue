@@ -1,4 +1,3 @@
-<!-- src/pages/IllustrationDetailView.vue -->
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
@@ -14,12 +13,7 @@ const illustration = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
 
-/* ==========================================================================
-   Scroll iniziale
-   - Garantisce l’avvio view dall’inizio pagina
-   ========================================================================== */
 window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-
 
 /* Navigazione sequenziale tra illustrazioni */
 const orderedIds = ref([])
@@ -28,7 +22,7 @@ const currentIndex = computed(() =>
 )
 
 /* Fetch illustrazione */
-async function fetchIllustration () {
+async function fetchIllustration() {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 
   loading.value = true
@@ -59,8 +53,7 @@ async function fetchIllustration () {
   }
 }
 
-/* Fetch lista ordinata di id (una sola volta) */
-async function fetchOrderedIdsOnce () {
+async function fetchOrderedIdsOnce() {
   if (orderedIds.value.length) return
   const q = query(collection(db, 'illustrations'), orderBy('order', 'asc'))
   const snap = await getDocs(q)
@@ -69,19 +62,19 @@ async function fetchOrderedIdsOnce () {
 
 /* Palette categorie e stile pill */
 const CATEGORY_COLORS = {
-  'Lavoro su commissione': { bg: '#ffe3e9', bd: '#ffa8c0', fg: '#7a1f3a' },
-  'Progetto Personale':    { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
-  'Pubblicazione':         { bg: '#e5dbff', bd: '#b197fc', fg: '#3b2f7a' },
-  'Challenge Artistica':   { bg: '#f3e8ff', bd: '#d0b3ff', fg: '#4a1d7a' },
-  Other:                   { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
+  'Commissione': { bg: '#ffe3e9', bd: '#ffa8c0', fg: '#7a1f3a' },
+  'Progetto Personale': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
+  'Pubblicazione': { bg: '#e5dbff', bd: '#b197fc', fg: '#3b2f7a' },
+  'Challenge Artistica': { bg: '#f3e8ff', bd: '#d0b3ff', fg: '#4a1d7a' },
+  Other: { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
 const currentCategory = computed(() => {
   const raw = (illustration.value?.category || '').trim()
-  if (/commissione/i.test(raw))   return 'Lavoro su commissione'
-  if (/personale/i.test(raw))     return 'Progetto Personale'
+  if (/commissione/i.test(raw)) return 'Commissione'
+  if (/personale/i.test(raw)) return 'Progetto Personale'
   if (/pubblicazione/i.test(raw)) return 'Pubblicazione'
-  if (/challenge/i.test(raw))     return 'Challenge Artistica'
+  if (/challenge/i.test(raw)) return 'Challenge Artistica'
   return raw in CATEGORY_COLORS ? raw : 'Other'
 })
 
@@ -94,7 +87,6 @@ const pillStyle = computed(() => {
   }
 })
 
-/* Testi accessibilità */
 const altText = computed(() =>
   illustration.value?.title
     ? `Illustrazione: ${illustration.value.title}`
@@ -102,24 +94,23 @@ const altText = computed(() =>
 )
 
 /* Navigazione prev/next */
-function goPrev () {
+function goPrev() {
   if (currentIndex.value > 0) {
     const target = orderedIds.value[currentIndex.value - 1]
     router.push({ name: 'illustration-details', params: { id: target } })
   }
 }
-function goNext () {
+function goNext() {
   if (currentIndex.value >= 0 && currentIndex.value < orderedIds.value.length - 1) {
     const target = orderedIds.value[currentIndex.value + 1]
     router.push({ name: 'illustration-details', params: { id: target } })
   }
 }
-function onKeydown (e) {
-  if (e.key === 'ArrowLeft')  { e.preventDefault(); goPrev() }
+function onKeydown(e) {
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
   if (e.key === 'ArrowRight') { e.preventDefault(); goNext() }
 }
 
-/* Lifecycle */
 onMounted(async () => {
   await Promise.all([fetchOrderedIdsOnce(), fetchIllustration()])
 })
@@ -129,143 +120,99 @@ watch(() => route.params.id, fetchIllustration)
 <template>
   <main class="page bg-surface text-text">
 
-    <!-- Stato: loading -->
-    <div
-      v-if="loading"
-      class="loading text-center opacity-80 py-40"
-      role="status"
-      aria-live="polite"
-    >
+    <div v-if="loading" class="loading text-center opacity-80 py-40" role="status" aria-live="polite">
       Caricamento illustrazione…
     </div>
 
-    <!-- Stato: not found -->
-    <div v-else-if="notFound" class="notfound text-center opacity-80 py-40">
+    <div v-else-if="notFound" class="notfound text-center opacity-80 py-40" role="alert">
       <p>Illustrazione non trovata.</p>
-
       <RouterLink to="/illustrations" class="back-link text-accent no-underline">
         Torna alla sezione illustrazioni
       </RouterLink>
     </div>
 
-    <!-- Stato: ok -->
     <div v-else-if="illustration" class="container max-w-[1120px] mx-auto relative">
 
-      <!-- Pulsante back -->
-      <RouterLink
-        to="/illustrations"
-        class="back-btn absolute -top-[60px] left-0 w-12 h-12 bg-transparent inline-flex items-center justify-center no-underline transition
+      <RouterLink to="/illustrations" class="back-btn absolute -top-[60px] left-0 w-12 h-12 bg-transparent inline-flex items-center justify-center no-underline transition
                hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
                focus-visible:outline  focus-visible:outline-[var(--color-accent)]"
-        aria-label="Torna alle illustrazioni"
-        title="Torna alle illustrazioni"
-      >
+        aria-label="Torna alle illustrazioni" title="Torna alle illustrazioni">
         <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block" />
         <span class="sr-only">Torna alle illustrazioni</span>
       </RouterLink>
 
-      <!-- Titolo -->
       <h1 class="title text-accent text-center">
         {{ illustration.title }}
       </h1>
 
-      <!-- Viewer -->
-      <section
-        class="viewer grid items-center gap-6 mb-14"
-        aria-label="Illustrazione"
-        tabindex="0"
-        @keydown="onKeydown"
-      >
-        <!-- Prev -->
-        <button
-          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
+      <section class="viewer grid items-center gap-6 mb-14" aria-label="Visualizzatore illustrazione" tabindex="0"
+        @keydown="onKeydown">
+        <button class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
                  hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
                  focus-visible:outline  focus-visible:outline-[var(--color-accent)]
-                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
-          type="button"
-          :disabled="currentIndex <= 0"
-          aria-label="Illustrazione precedente"
-          title="Illustrazione precedente"
-          @click="goPrev"
-        >
-          <img
-            src="/icone/icon-prev.svg"
-            alt=""
-            aria-hidden="true"
-            class="icon w-6 h-6 block pointer-events-none"
-          />
+                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent" type="button"
+          :disabled="currentIndex <= 0" aria-label="Illustrazione precedente" title="Illustrazione precedente"
+          @click="goPrev">
+          <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
-        <!-- Stage -->
         <figure class="stage bg-[var(--color-surface)] min-h-[420px] grid place-items-center overflow-hidden">
-          <img
-            :src="illustration.img"
-            :alt="altText"
-            class="stage-img block w-auto max-w-full"
-            loading="eager"
-          />
+          <img :src="illustration.img" :alt="altText" class="stage-img block w-auto max-w-full" loading="eager" />
         </figure>
 
-        <!-- Next -->
-        <button
-          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
+        <button class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
                  hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
                  focus-visible:outline  focus-visible:outline-[var(--color-accent)]
-                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
-          type="button"
-          :disabled="currentIndex === orderedIds.length - 1"
-          aria-label="Illustrazione successiva"
-          title="Illustrazione successiva"
-          @click="goNext"
-        >
-          <img
-            src="/icone/icon-next.svg"
-            alt=""
-            aria-hidden="true"
-            class="icon w-6 h-6 block pointer-events-none"
-          />
+                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent" type="button"
+          :disabled="currentIndex === orderedIds.length - 1" aria-label="Illustrazione successiva"
+          title="Illustrazione successiva" @click="goNext">
+          <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
       </section>
 
-      <!-- Meta -->
-      <section class="meta grid gap-[72px] mt-4" aria-label="Dettagli illustrazione">
+      <section class="meta grid gap-[72px] mt-4" aria-label="Scheda tecnica dell'opera">
         <div class="col">
-          <h3 class="text-accent">Data</h3>
-          <p v-if="illustration.year">
-            {{ illustration.year }}
-          </p>
+          <dl class="meta-list">
+            <dt v-if="illustration.year">
+              <h2 class="meta-label">Data</h2>
+            </dt>
+            <dd v-if="illustration.year">
+              <p>{{ illustration.year }}</p>
+            </dd>
 
-          <h3 class="text-accent">Tipo di progetto</h3>
-          <p>
-            <span class="pill" :style="pillStyle">
-              {{ currentCategory }}
-            </span>
-          </p>
+            <dt>
+              <h2 class="meta-label">Tipo di progetto</h2>
+            </dt>
+            <dd>
+              <p>
+                <span class="pill" :style="pillStyle">
+                  {{ currentCategory }}
+                </span>
+              </p>
+            </dd>
 
-          <h3 class="text-accent">Tag</h3>
-          <ul
-            v-if="illustration.tag?.length"
-            class="tags"
-            aria-label="Tag dell’illustrazione"
-          >
-            <li
-              v-for="t in illustration.tag"
-              :key="t"
-              class="pill"
-              :style="pillStyle"
-            >
-              {{ t }}
-            </li>
-          </ul>
+            <dt v-if="illustration.tag?.length">
+              <h2 class="meta-label">Tag</h2>
+            </dt>
+            <dd v-if="illustration.tag?.length">
+              <ul class="tags" aria-label="Tag dell’illustrazione">
+                <li v-for="t in illustration.tag" :key="t" class="pill" :style="pillStyle">
+                  {{ t }}
+                </li>
+              </ul>
+            </dd>
 
-          <h3 class="text-accent">Tecnica (Tools)</h3>
-          <p v-if="illustration.tools">
-            {{ illustration.tools }}
-          </p>
+            <dt v-if="illustration.tools">
+              <h2 class="meta-label">Tecnica (Tools)</h2>
+            </dt>
+            <dd v-if="illustration.tools">
+              <p>{{ illustration.tools }}</p>
+            </dd>
+          </dl>
         </div>
 
         <div class="col">
-          <h3 class="text-accent">Description:</h3>
+          <h2 class="meta-label">Descrizione</h2>
           <p v-if="illustration.description" class="desc">
             {{ illustration.description }}
           </p>
@@ -276,7 +223,6 @@ watch(() => route.params.id, fetchIllustration)
 </template>
 
 <style scoped>
-/* Solo lettura per screen reader */
 .sr-only {
   position: absolute !important;
   width: 1px;
@@ -289,49 +235,58 @@ watch(() => route.params.id, fetchIllustration)
   border: 0;
 }
 
-/* Layout pagina */
 .page {
   padding: 48px var(--margin-desktop) 112px;
 }
+
 @media (max-width: 768px) {
   .page {
     padding: 32px var(--margin-mobile) 96px;
   }
 }
 
-/* Titolo principale */
 .title {
-  font-size: clamp(32px, 4.2vw, 56px);
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
   line-height: 1.1;
   margin: 56px 0 40px;
 }
 
-/* Viewer: griglia 48px | 1fr | 48px */
 .viewer {
   grid-template-columns: 48px 1fr 48px;
 }
+
 @media (max-width: 768px) {
   .viewer {
     grid-template-columns: 1fr;
     gap: 16px;
     margin-bottom: 40px;
   }
+
   .nav {
-    display: none; /* su mobile si usa lo scroll/pagina */
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
   }
 }
 
-/* Immagine principale */
 .stage-img {
-  height: clamp(360px, 62vh, 720px);
+  height: clamp(22.5rem, 62vh, 45rem);
   max-height: 80vh;
   object-fit: contain;
 }
+
 @media (max-width: 768px) {
   .stage {
-    min-height: 300px;
+    min-height: 18.75rem;
     padding: 8px 0;
   }
+
   .stage-img {
     width: 100%;
     height: auto;
@@ -339,10 +294,10 @@ watch(() => route.params.id, fetchIllustration)
   }
 }
 
-/* Metadati */
 .meta {
   grid-template-columns: 1fr 2fr;
 }
+
 @media (max-width: 768px) {
   .meta {
     grid-template-columns: 1fr;
@@ -350,20 +305,25 @@ watch(() => route.params.id, fetchIllustration)
   }
 }
 
-.meta h3 {
-  font-size: clamp(20px, 1.9vw, 24px);
+.meta-list {
+  margin: 0;
+  padding: 0;
+}
+
+.meta-label {
+  font-size: clamp(1.25rem, 1.9vw, 1.5rem);
   margin: 0 0 12px;
   color: var(--color-accent);
+  font-weight: 700;
 }
 
 .desc,
-.meta .col p {
-  font-size: clamp(15px, 1.05vw, 18px);
+.meta-list dd p {
+  font-size: clamp(0.93rem, 1.05vw, 1.12rem);
   line-height: 1.8;
   margin: 0 0 14px;
 }
 
-/* Tag e pill */
 .tags {
   display: flex;
   gap: 12px;
@@ -373,6 +333,7 @@ watch(() => route.params.id, fetchIllustration)
   list-style: none;
   padding: 0;
 }
+
 .pill {
   padding: 8px 12px;
   border-radius: 999px;

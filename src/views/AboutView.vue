@@ -19,13 +19,12 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
     aria-labelledby="about-title"
   >
     <!--Sezione introduttiva  -->
-    <section
+    <section id="about-intro" 
       class="mx-auto max-w-[1200px] grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-[72px] items-start"
       role="region"
-      aria-labelledby="about-title"
     >
       <!-- Immagine di presentazione -->
-      <div class="portrait" aria-hidden="true" role="img"></div>
+      <div class="portrait" role="img" aria-label="Immagine di presentazione"></div>
 
       <!-- Testo bio -->
       <article class="bio max-w-[68ch]">
@@ -132,15 +131,19 @@ body.dark-mode .portrait {
    ========================================================================== */
 @media (max-width: 1024px) and (min-width: 769px) {
   #about-title {
-    font-size: 40pt;
-    line-height: 50pt;
+    font-size: 3.3rem;
+    /* Convertito da 40pt */
+    line-height: 4.15rem;
+    /* Convertito da 50pt */
   }
 }
 
 @media (max-width: 768px) {
   #about-title {
-    font-size: 28pt;
-    line-height: 36pt;
+    font-size: 2.3rem;
+    /* Convertito da 28pt */
+    line-height: 3rem;
+    /* Convertito da 36pt */
     white-space: normal;
   }
 }
