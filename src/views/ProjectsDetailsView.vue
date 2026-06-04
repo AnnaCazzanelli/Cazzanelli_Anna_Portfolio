@@ -3,22 +3,35 @@
    Import e routing
    ========================================================================= */
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute, useRouter, RouterLink } from 'vue-router'
 
 /* ==========================================================================
    Firestore
    ========================================================================= */
 import { db } from '@/firebase/config'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, collection, query, orderBy, getDocs } from 'firebase/firestore'
 
 /* ==========================================================================
    Stato view
    ========================================================================= */
 const route = useRoute()
+const router = useRouter()
 const project = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
 const activeIndex = ref(0)
+
+// Navigazione tra progetti (ID ordinati)
+const orderedIds = ref([])
+const currentIndexInList = computed(() => {
+  return orderedIds.value.indexOf(String(route.params.id || '').trim())
+})
+const nextProjectId = computed(() => {
+  if (currentIndexInList.value !== -1 && currentIndexInList.value < orderedIds.value.length - 1) {
+    return orderedIds.value[currentIndexInList.value + 1]
+  }
+  return null
+})
 
 /* ==========================================================================
    Helpers
@@ -133,40 +146,67 @@ const thumbs = computed(() => {
 })
 
 /* ==========================================================================
-   Navigazione e Auto-scroll miniature
+   Navigazione Carosello
    ========================================================================= */
 const setActive = (i) => { activeIndex.value = i }
 const prev = () => { if (activeIndex.value > 0) activeIndex.value-- }
 const next = () => { if (activeIndex.value < images.value.length - 1) activeIndex.value++ }
 
-watch(activeIndex, async () => {
+// Spostamento assistito miniature bloccato su mobile per prevenire la trottola
+watch(activeIndex, () => {
+  if (window.innerWidth <= 768) return
+
   const container = document.querySelector('.thumbs')
   const activeThumb = document.querySelector('.thumb.active')
   if (container && activeThumb) {
-    const scrollLeft = activeThumb.offsetLeft - container.offsetWidth / 2 + activeThumb.offsetWidth / 2
-    container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    const containerLeft = container.scrollLeft
+    const containerRight = containerLeft + container.offsetWidth
+    const thumbLeft = activeThumb.offsetLeft
+    const thumbRight = thumbLeft + activeThumb.offsetWidth
+
+    if (thumbLeft < containerLeft || thumbRight > containerRight) {
+      const scrollLeft = thumbLeft - container.offsetWidth / 2 + activeThumb.offsetWidth / 2
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
+    }
   }
 })
 
 /* ==========================================================================
-   Swipe touch
+   Logica Click & Drag con il Mouse per Desktop
    ========================================================================= */
-const startX = ref(0)
-const deltaX = ref(0)
+let isDown = false
+let startXScroll
+let scrollLeftStart
 
-const onTouchStart = (e) => {
-  startX.value = e.changedTouches[0].clientX
-  deltaX.value = 0
+const onMousedown = (e) => {
+  const container = document.querySelector('.thumbs')
+  if (!container) return
+  isDown = true
+  container.classList.add('dragging')
+  startXScroll = e.pageX - container.offsetLeft
+  scrollLeftStart = container.scrollLeft
 }
 
-const onTouchMove = (e) => {
-  deltaX.value = e.changedTouches[0].clientX - startX.value
+const onMouseleave = () => {
+  const container = document.querySelector('.thumbs')
+  isDown = false
+  if (container) container.classList.remove('dragging')
 }
 
-const onTouchEnd = () => {
-  if (Math.abs(deltaX.value) > 45) {
-    deltaX.value < 0 ? next() : prev()
-  }
+const onMouseup = () => {
+  const container = document.querySelector('.thumbs')
+  isDown = false
+  if (container) container.classList.remove('dragging')
+}
+
+const onMousemove = (e) => {
+  if (!isDown) return
+  e.preventDefault()
+  const container = document.querySelector('.thumbs')
+  if (!container) return
+  const x = e.pageX - container.offsetLeft
+  const walk = (x - startXScroll) * 1.5
+  container.scrollLeft = scrollLeftStart - walk
 }
 
 /* ==========================================================================
@@ -192,9 +232,9 @@ const tagStyle = computed(() => {
 })
 
 /* ==========================================================================
-   Fetch progetto
+   Fetch dati
    ========================================================================= */
-async function fetchProject() {
+async function fetchProjectData() {
   loading.value = true
   notFound.value = false
   project.value = null
@@ -208,6 +248,15 @@ async function fetchProject() {
       return
     }
     project.value = { id: snap.id, ...snap.data() }
+
+    if (orderedIds.value.length === 0) {
+      const colRef = collection(db, 'projects')
+      const q = query(colRef, orderBy('order', 'asc'))
+      const listSnap = await getDocs(q)
+      const ids = []
+      listSnap.forEach((doc) => ids.push(doc.id))
+      orderedIds.value = ids
+    }
   } catch (e) {
     notFound.value = true
   } finally {
@@ -215,8 +264,8 @@ async function fetchProject() {
   }
 }
 
-onMounted(fetchProject)
-watch(() => route.params.id, fetchProject)
+onMounted(fetchProjectData)
+watch(() => route.params.id, fetchProjectData)
 </script>
 
 <template>
@@ -233,58 +282,68 @@ watch(() => route.params.id, fetchProject)
 
     <div v-else-if="project" class="container max-w-[1200px] mx-auto relative">
 
-      <RouterLink to="/projects"
-        class="back-btn absolute -top-[60px] left-0 w-12 h-12 inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10"
-        aria-label="Torna alla lista progetti" title="Torna alla lista progetti">
-        <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6" />
-        <span class="sr-only">Torna alla lista progetti</span>
-      </RouterLink>
+      <div class="top-nav-bar flex justify-between items-center w-full absolute -top-[60px] left-0 px-1">
+        <RouterLink to="/projects" class="back-btn w-12 h-12 inline-flex items-center justify-center bg-transparent"
+          aria-label="Torna alla lista progetti" title="Torna alla lista progetti">
+          <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block" />
+          <span class="sr-only">Torna alla lista progetti</span>
+        </RouterLink>
+
+        <RouterLink v-if="nextProjectId" :to="{ name: 'project-details', params: { id: nextProjectId } }"
+          class="next-project-btn w-12 h-12 inline-flex items-center justify-center bg-transparent"
+          aria-label="Vai al progetto successivo" title="Vai al progetto successivo">
+          <img src="/icone/icon-arrowdx.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block" />
+          <span class="sr-only">Progetto successivo</span>
+        </RouterLink>
+        <div v-else class="w-12 h-12 opacity-0 pointer-events-none"></div>
+      </div>
 
       <h1 class="title text-accent text-center">{{ project.title }}</h1>
 
-      <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-6 mb-14"
+      <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-4 md:gap-6 mb-14"
         aria-label="Visualizzatore elementi del progetto">
 
         <button
-          class="nav w-12 h-12 inline-flex items-center justify-center transition disabled:opacity-30 hover:bg-black/5 dark:hover:bg-white/10"
-          :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente" title="Elemento precedente">
-          <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="w-6 h-6" />
+          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
+          type="button" :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente"
+          title="Elemento precedente">
+          <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
-        <div class="stage bg-surface grid place-items-center overflow-hidden w-full" @touchstart.passive="onTouchStart"
-          @touchmove.passive="onTouchMove" @touchend="onTouchEnd">
+        <div class="stage bg-surface grid place-items-center overflow-hidden w-full">
           <iframe v-if="images[activeIndex]?.type === 'video'" :src="images[activeIndex].src"
             title="YouTube video player" frameborder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowfullscreen class="block w-full max-w-[1080px] aspect-video rounded-lg mx-auto"></iframe>
 
           <img v-else :src="images[activeIndex]?.src" :alt="images[activeIndex]?.alt"
-            class="stage-img block h-[clamp(22.5rem,62vh,45rem)] w-auto max-w-full object-contain" loading="eager" />
+            class="stage-img block h-[clamp(18rem,60vh,45rem)] w-auto max-w-full object-contain mx-auto"
+            loading="eager" />
         </div>
 
         <button
-          class="nav w-12 h-12 inline-flex items-center justify-center transition disabled:opacity-30 hover:bg-black/5 dark:hover:bg-white/10"
-          :disabled="activeIndex === images.length - 1" @click="next" aria-label="Immagine successiva"
+          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
+          type="button" :disabled="activeIndex === images.length - 1" @click="next" aria-label="Immagine successiva"
           title="Immagine successiva">
-          <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="w-6 h-6" />
+          <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
       </section>
 
-      <section v-if="thumbs.length > 1" class="thumbs flex gap-4 overflow-x-auto scroll-smooth no-scrollbar mb-14 px-20"
-        role="list" aria-label="Miniature della galleria">
-        <button v-for="(t, i) in thumbs" :key="t.src + i"
-          class="thumb flex-shrink-0 w-[112px] h-[112px] rounded-lg overflow-hidden border-2 transition opacity-70"
-          :class="{ 'active opacity-100 border-[var(--color-accent)]': i === activeIndex }" @click="setActive(i)"
-          :aria-label="'Mostra immagine ' + (i + 1)" :title="'Mostra immagine ' + (i + 1)"
-          :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
-          <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover" />
-        </button>
+      <section v-if="thumbs.length > 1" class="thumbs-container mb-14 overflow-hidden">
+        <div class="thumbs flex gap-4 no-scrollbar px-4 md:px-20" role="list" aria-label="Miniature della galleria"
+          @mousedown="onMousedown" @mouseleave="onMouseleave" @mouseup="onMouseup" @mousemove="onMousemove">
+          <button v-for="(t, i) in thumbs" :key="t.src + i"
+            class="thumb flex-shrink-0 w-[112px] h-[112px] rounded-lg overflow-hidden border-2 transition"
+            :class="{ 'active': i === activeIndex }" @click="setActive(i)" :aria-label="'Mostra immagine ' + (i + 1)"
+            :title="'Mostra immagine ' + (i + 1)" :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
+            <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover pointer-events-none" />
+          </button>
+        </div>
       </section>
 
       <section class="meta grid grid-cols-[1fr_2fr] gap-[72px] pt-10 border-t border-black/5 dark:border-white/5"
         aria-label="Scheda informativa del progetto">
-
         <div class="col">
           <dl class="meta-list">
             <dt v-if="project.year">
@@ -293,14 +352,14 @@ watch(() => route.params.id, fetchProject)
             <dd v-if="project.year">
               <p>{{ project.year }}</p>
             </dd>
+
             <dt v-if="project.drive_url">
               <h2 class="meta-label">Link di progetto</h2>
             </dt>
             <dd v-if="project.drive_url">
               <p>
                 <a :href="project.drive_url" target="_blank" rel="noopener noreferrer"
-                  class="external-link sidebar-link"
-                  aria-label="Visualizza i materiali aggiuntivi del progetto su Google Drive (apre una nuova scheda)">
+                  class="external-link sidebar-link" aria-label="Visualizza i materiali aggiuntivi su Drive">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                     stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -309,6 +368,7 @@ watch(() => route.params.id, fetchProject)
                 </a>
               </p>
             </dd>
+
             <dt>
               <h2 class="meta-label">Tipo di progetto</h2>
             </dt>
@@ -321,9 +381,7 @@ watch(() => route.params.id, fetchProject)
             </dt>
             <dd v-if="project.tag?.length">
               <ul class="tags flex flex-wrap gap-3 list-none p-0" aria-label="Tag del progetto">
-                <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">
-                  {{ t }}
-                </li>
+                <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
               </ul>
             </dd>
 
@@ -341,10 +399,9 @@ watch(() => route.params.id, fetchProject)
           <h2 class="meta-label">Descrizione</h2>
           <div v-if="project.description" class="desc leading-relaxed">
             <p v-html="project.description"></p>
-
             <div v-if="project.drive_url" class="external-links-wrapper mt-8">
               <a :href="project.drive_url" target="_blank" rel="noopener noreferrer" class="external-link"
-                aria-label="Visualizza i materiali aggiuntivi del progetto su Google Drive (apre una nuova scheda)">
+                aria-label="Visualizza i materiali aggiuntivi su Drive">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                   stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -352,10 +409,8 @@ watch(() => route.params.id, fetchProject)
                 <span>Visualizza materiali aggiuntivi su Drive</span>
               </a>
             </div>
-
           </div>
         </div>
-
       </section>
 
     </div>
@@ -374,6 +429,33 @@ watch(() => route.params.id, fetchProject)
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+.top-nav-bar {
+  width: 100%;
+}
+
+.back-btn,
+.next-project-btn {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: pointer;
+}
+
+.back-btn img,
+.next-project-btn img {
+  transition: transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.back-btn:hover img {
+  transform: translateX(-4px);
+}
+
+.next-project-btn:hover img {
+  transform: translateX(4px);
+}
+
 .external-link {
   display: inline-flex;
   align-items: center;
@@ -402,13 +484,60 @@ watch(() => route.params.id, fetchProject)
   margin: 56px 0 48px;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.nav {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
 }
 
-.no-scrollbar {
+.nav:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05) !important;
+
+  transform: scale(1.05);
+}
+
+.nav:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+:global(.dark) .nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.thumbs-container {
+  width: 100%;
+}
+
+.thumbs {
   -ms-overflow-style: none;
   scrollbar-width: none;
+  overflow-x: auto;
+}
+
+/* CORRETTO: Isolata la transizione solo su opacity e bloccata la dissolvenza del colore */
+.thumb {
+  border: 2px solid var(--color-text) !important;
+  opacity: 0.7;
+  transition: opacity 0.2s ease !important;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+}
+
+/* CORRETTO: Quando è selezionata scatta all'istante diventando viola senza ritardi */
+.thumb.active {
+  border-color: var(--color-accent) !important;
+  opacity: 100 !important;
+  transition: none !important;
+}
+
+.thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 .meta-list {
@@ -441,32 +570,68 @@ watch(() => route.params.id, fetchProject)
   font-weight: var(--font-weight-semibold);
   line-height: normal;
   border: 1px solid currentColor;
-
 }
+
+/* ==========================================================================
+   VERSIONE MOBILE ADATTATA
+   ========================================================================= */
 @media (max-width: 768px) {
   .page {
-    padding: 32px var(--margin-mobile) 96px;
+    padding: 48px var(--margin-mobile) 96px;
+  }
+
+  .title {
+    margin: 56px 0 48px;
+    font-size: 2.2rem;
   }
 
   .viewer {
-    grid-template-columns: 1fr;
+    grid-template-columns: 40px 1fr 40px;
+    gap: 8px;
+    margin-bottom: 24px;
   }
 
   .nav {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
+    width: 40px;
+    height: 40px;
+    position: static !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+  }
+
+  .nav img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .stage-img {
+    height: 45vh !important;
+  }
+
+  .thumbs {
+    padding-inline: 4px;
   }
 
   .meta {
     grid-template-columns: 1fr;
     gap: 32px;
+  }
+
+  .meta-list dt {
+    margin-top: 24px;
+  }
+
+  .meta-list dt:first-child {
+    margin-top: 0;
+  }
+
+  .meta-label {
+    margin-bottom: 6px;
+  }
+
+  .meta-list dd p {
+    margin-bottom: 0;
   }
 }
 </style>
