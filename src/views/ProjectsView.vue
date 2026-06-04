@@ -278,23 +278,33 @@ body.dark-mode .hero-image-container {
 
 /* --- CARDS & PILLS --- */
 .cat-badge {
-  position: absolute;
+ position: absolute;
   top: 10px;
   left: 10px;
-  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
   border-radius: 999px;
-  font-size: 0.9rem;
-  font-family: var(--font-body);
-  line-height: 1;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: normal;
   border: 1px solid currentColor;
+
+  
+
 }
 
 .pill {
-  padding: 7px 14px;
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
   border-radius: 999px;
   border: 1px solid currentColor;
   font-size: 0.9rem;
-  line-height: 1;
+  font-weight: var(--font-weight-medium);
+  line-height: normal;
 }
 
 /* --- UTILS --- */

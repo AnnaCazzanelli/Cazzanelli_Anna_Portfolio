@@ -293,7 +293,22 @@ watch(() => route.params.id, fetchProject)
             <dd v-if="project.year">
               <p>{{ project.year }}</p>
             </dd>
-
+            <dt v-if="project.drive_url">
+              <h2 class="meta-label">Link di progetto</h2>
+            </dt>
+            <dd v-if="project.drive_url">
+              <p>
+                <a :href="project.drive_url" target="_blank" rel="noopener noreferrer"
+                  class="external-link sidebar-link"
+                  aria-label="Visualizza i materiali aggiuntivi del progetto su Google Drive (apre una nuova scheda)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>Materiali aggiuntivi</span>
+                </a>
+              </p>
+            </dd>
             <dt>
               <h2 class="meta-label">Tipo di progetto</h2>
             </dt>
@@ -326,13 +341,18 @@ watch(() => route.params.id, fetchProject)
           <h2 class="meta-label">Descrizione</h2>
           <div v-if="project.description" class="desc leading-relaxed">
             <p v-html="project.description"></p>
-            <div v-if="project.behance_url" class="mt-8">
-              <a :href="project.behance_url" target="_blank" rel="noopener noreferrer" class="behance-link"
-                aria-label="Scopri il video presentazione su Behance (apre una nuova scheda)">
-                <img src="/icone/icon-behance.svg" alt="" aria-hidden="true" class="w-4 h-4" />
-                <span>Scopri il video presentazione su Behance</span>
+
+            <div v-if="project.drive_url" class="external-links-wrapper mt-8">
+              <a :href="project.drive_url" target="_blank" rel="noopener noreferrer" class="external-link"
+                aria-label="Visualizza i materiali aggiuntivi del progetto su Google Drive (apre una nuova scheda)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>Visualizza materiali aggiuntivi su Drive</span>
               </a>
             </div>
+
           </div>
         </div>
 
@@ -354,8 +374,7 @@ watch(() => route.params.id, fetchProject)
   white-space: nowrap !important;
   border: 0 !important;
 }
-
-.behance-link {
+.external-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -365,8 +384,12 @@ watch(() => route.params.id, fetchProject)
   font-size: 0.875rem;
 }
 
-.behance-link:hover {
+.external-link:hover {
   color: var(--color-hover);
+}
+
+.external-links-wrapper {
+  margin-top: 2rem;
 }
 
 .page {
@@ -409,13 +432,17 @@ watch(() => route.params.id, fetchProject)
 }
 
 .pill {
-  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
   border-radius: 999px;
   font-size: 0.95rem;
-  line-height: 1;
+  font-weight: var(--font-weight-semibold);
+  line-height: normal;
   border: 1px solid currentColor;
-}
 
+}
 @media (max-width: 768px) {
   .page {
     padding: 32px var(--margin-mobile) 96px;

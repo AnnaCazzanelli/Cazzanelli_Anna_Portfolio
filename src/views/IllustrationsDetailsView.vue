@@ -335,11 +335,14 @@ watch(() => route.params.id, fetchIllustration)
 }
 
 .pill {
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-family: var(--font-body);
-  line-height: 1;
-  border: 1px solid currentColor;
+  display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: var(--font-weight-semibold);
+    line-height: normal;
+    border: 1px solid currentColor;
 }
 </style>

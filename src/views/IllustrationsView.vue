@@ -153,8 +153,7 @@ onMounted(getIllustrations)
             :aria-label="ariaLabelFor(illustration)" role="listitem">
             <figure class="media relative m-0">
               <img :src="illustration.img" :alt="altFor(illustration)" loading="lazy" class="block max-w-full h-auto" />
-              <figcaption class="cat-badge absolute top-2.5 left-2.5 px-2.5 py-1 text-[0.75rem] font-semibold"
-                :style="tagStyle(illustration.category)">
+              <figcaption class="cat-badge absolute top-2.5 left-2.5" :style="tagStyle(illustration.category)">
                 {{ normalizeCategory(illustration.category) }}
               </figcaption>
             </figure>
@@ -162,8 +161,7 @@ onMounted(getIllustrations)
             <div class="illustration-details flex flex-col items-center">
               <h3 class="title mt-4 mb-2">{{ illustration.title }}</h3>
               <div v-if="illustration.tag?.length" class="illustration-tags flex flex-wrap justify-center gap-1.5 mt-2">
-                <span v-for="tag in illustration.tag" :key="tag" class="tag px-2 py-1 text-[0.8rem]"
-                  :style="tagStyle(illustration.category)">
+                <span v-for="tag in illustration.tag" :key="tag" class="tag" :style="tagStyle(illustration.category)">
                   {{ tag }}
                 </span>
               </div>
@@ -337,9 +335,19 @@ body.dark-mode .hero-image-container {
   box-shadow: 0 1px 2px rgba(var(--text-rgb) / 0.20), 0 8px 20px rgba(var(--text-rgb) / 0.12);
 }
 
+/* UNIFORMATE: Configurate con Flexbox per mantenere l'allineamento matematico perfetto al centro */
 .cat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
   border: 1px solid currentColor;
   border-radius: 9999px;
+  line-height: normal;
+
+  /* Parametri richiesti: Semibold e 0.95rem */
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
 }
 
 .illustration-item:hover .media,
@@ -363,9 +371,17 @@ body.dark-mode .hero-image-container {
   line-height: 1.5;
 }
 
+
 .tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
   border: 1px solid currentColor;
   border-radius: 9999px;
+  line-height: normal;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
 }
 
 .sr-only {
