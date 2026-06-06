@@ -284,7 +284,7 @@ watch(illustrations, async () => {
                   :alt="p.title ? `Anteprima progetto: ${p.title}` : 'Anteprima progetto'" loading="lazy" />
               </div>
 
-              <h3 class="card-title ">
+              <h3 class="card-title mt-4">
                 {{ p.title || 'Senza titolo' }}
               </h3>
             </RouterLink>
@@ -603,10 +603,12 @@ watch(illustrations, async () => {
 
 .card-title {
   margin: 12px 8px 0;
-  font-size: 16px;
+  font-size: 1.5rem;
+  line-height: 1.5;
   font-weight: 700;
   text-align: center;
   color: var(--color-accent);
+ 
 }
 
 .card:hover .card-title {
