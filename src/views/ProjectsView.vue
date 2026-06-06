@@ -22,21 +22,21 @@ onMounted(() => {
 
 /* ==========================================================================
    Configurazione Categorie e Colori
-   ========================================================================== */
+   ========================================================================= */
 const CATEGORY_COLORS = {
-  'Visual Design': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
+  'Motion Graphics': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
   'Web Design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
   'Communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
   'Case Studies': { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
-  'Motion Graphics': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
+  'Visual Design': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
   Other: { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
-const filterOptions = ['All', 'Web Design', 'Motion Graphics', 'Communication', 'Visual Design', 'Case Studies'];
+const filterOptions = ['All', 'Case Studies', 'Web Design', 'Visual Design', 'Communication' , 'Motion Graphics'];
 
 /* ==========================================================================
    Logica di Filtraggio e Stili
-   ========================================================================== */
+   ========================================================================= */
 const filteredProjects = computed(() => {
   if (activeFilter.value === 'All') return projects.value
   return projects.value.filter(p => p.category === activeFilter.value)
@@ -74,7 +74,7 @@ function badgeStyle(category) {
 
 /* ==========================================================================
    Accessibilità e Fetch
-   ========================================================================== */
+   ========================================================================= */
 function ariaLabelFor(p) {
   const cat = p.category || 'Categoria non specificata'
   const tags = Array.isArray(p.tag) && p.tag.length ? `. Tag: ${p.tag.join(', ')}.` : ''
@@ -124,7 +124,7 @@ async function getProjects() {
               :class="{ 'active': activeFilter === cat }" :style="activeFilter === cat ? getFilterActiveStyle(cat) : {}"
               :aria-pressed="activeFilter === cat"
               :aria-label="cat === 'All' ? 'Mostra tutti i progetti' : `Mostra progetti dell'ambito ${cat}`">
-              {{ cat === 'All' ? 'Tutti i progetti' : cat }}
+              {{ cat === 'All' ? 'Tutte i progetti' : cat }}
             </button>
           </div>
         </div>
@@ -148,12 +148,14 @@ async function getProjects() {
           class="project-item no-underline text-inherit flex flex-col items-center text-center cursor-pointer outline-none"
           :to="{ name: 'project-details', params: { id: p.firestoreId } }" :aria-label="ariaLabelFor(p)"
           role="listitem">
-          <figure class="relative w-full aspect-[1200/800] overflow-hidden bg-[var(--color-surface)] m-0">
+
+          <div class="relative w-full aspect-[1200/800] overflow-hidden bg-[var(--color-surface)] m-0">
             <img :src="p.img" :alt="altFor(p)" class="w-full h-full object-cover transition-transform duration-200" />
-            <figcaption class="cat-badge" :style="badgeStyle(p.category)">
+            <span class="cat-badge" :style="badgeStyle(p.category)">
               {{ p.category || 'Other' }}
-            </figcaption>
-          </figure>
+            </span>
+          </div>
+
           <h3 class="mt-4">{{ p.title }}</h3>
           <ul v-if="p.tag?.length" class="list-none flex flex-wrap justify-center mt-2 gap-2 p-0"
             aria-label="Tag di progetto">
@@ -278,7 +280,7 @@ body.dark-mode .hero-image-container {
 
 /* --- CARDS & PILLS --- */
 .cat-badge {
- position: absolute;
+  position: absolute;
   top: 10px;
   left: 10px;
   display: inline-flex;
@@ -290,13 +292,11 @@ body.dark-mode .hero-image-container {
   font-weight: var(--font-weight-semibold);
   line-height: normal;
   border: 1px solid currentColor;
-
-  
-
+  z-index: 10;
 }
 
 .pill {
-display: inline-flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 5px 12px;

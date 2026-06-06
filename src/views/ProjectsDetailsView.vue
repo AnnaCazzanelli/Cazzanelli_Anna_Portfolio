@@ -213,11 +213,11 @@ const onMousemove = (e) => {
    Gestione dei Colori Dinamici
    ========================================================================= */
 const CATEGORY_COLORS = {
-  'visual design': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
+  'motion graphics': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
   'web design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
   'communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
   'case studies': { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
-  'motion graphics': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
+  'visual design': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
   'other': { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
@@ -346,16 +346,12 @@ watch(() => route.params.id, fetchProjectData)
         aria-label="Scheda informativa del progetto">
         <div class="col">
           <dl class="meta-list">
-            <dt v-if="project.year">
-              <h2 class="meta-label">Data</h2>
-            </dt>
+            <dt v-if="project.year" class="meta-label">Data</dt>
             <dd v-if="project.year">
               <p>{{ project.year }}</p>
             </dd>
 
-            <dt v-if="project.drive_url">
-              <h2 class="meta-label">Link di progetto</h2>
-            </dt>
+            <dt v-if="project.drive_url" class="meta-label">Link di progetto</dt>
             <dd v-if="project.drive_url">
               <p>
                 <a :href="project.drive_url" target="_blank" rel="noopener noreferrer"
@@ -369,25 +365,19 @@ watch(() => route.params.id, fetchProjectData)
               </p>
             </dd>
 
-            <dt>
-              <h2 class="meta-label">Tipo di progetto</h2>
-            </dt>
+            <dt class="meta-label">Tipo di progetto</dt>
             <dd>
               <p><span class="pill inline-block" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
             </dd>
 
-            <dt v-if="project.tag?.length">
-              <h2 class="meta-label">Tag</h2>
-            </dt>
+            <dt v-if="project.tag?.length" class="meta-label">Tag</dt>
             <dd v-if="project.tag?.length">
               <ul class="tags flex flex-wrap gap-3 list-none p-0" aria-label="Tag del progetto">
                 <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
               </ul>
             </dd>
 
-            <dt>
-              <h2 class="meta-label">Tecnica (Tools)</h2>
-            </dt>
+            <dt class="meta-label">Tecnica (Tools)</dt>
             <dd>
               <p v-if="project.tools">{{ project.tools }}</p>
               <p v-else class="opacity-50">Dati non disponibili</p>
@@ -494,7 +484,6 @@ watch(() => route.params.id, fetchProjectData)
 
 .nav:hover:not(:disabled) {
   background: rgba(0, 0, 0, 0.05) !important;
-
   transform: scale(1.05);
 }
 
@@ -545,9 +534,12 @@ watch(() => route.params.id, fetchProjectData)
   padding: 0;
 }
 
+/* AGGIORNATO CON LE TUE SPECIFICHE: Uniformato per rispecchiare lo stile esatto dei titoli anche senza tag H2 */
 .meta-label {
   font-size: clamp(1.25rem, 1.9vw, 1.5rem);
   margin-bottom: 12px;
+  font-family: var(--font-heading);
+  font-style: normal;
   font-weight: 700;
   color: var(--color-accent);
 }
