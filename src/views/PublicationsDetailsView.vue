@@ -131,9 +131,10 @@ watch(() => route.params.id, fetchPublication)
       <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-6 mb-14"
         aria-label="Visualizzatore elementi della pubblicazione">
 
-        <button class="nav" :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente"
-          title="Elemento precedente">
-          <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="w-6 h-6" />
+        <button
+          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
+          :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente" title="Elemento precedente">
+          <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="w-6 h-6 block pointer-events-none" />
         </button>
 
         <div class="stage bg-surface grid place-items-center overflow-hidden">
@@ -142,20 +143,21 @@ watch(() => route.params.id, fetchPublication)
           <div v-else class="opacity-20 italic" role="status">Contenuto multimediale non disponibile</div>
         </div>
 
-        <button class="nav" :disabled="activeIndex === images.length - 1" @click="next" aria-label="Elemento successivo"
+        <button
+          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
+          :disabled="activeIndex === images.length - 1" @click="next" aria-label="Elemento successivo"
           title="Elemento successivo">
-          <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="w-6 h-6" />
+          <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
       </section>
 
       <section v-if="thumbs.length > 1" class="thumbs flex gap-4 overflow-x-auto scroll-smooth no-scrollbar mb-14 px-20"
         role="list" aria-label="Miniature della pubblicazione">
-        <button v-for="(t, i) in thumbs" :key="t.src + i" class="thumb flex-shrink-0 border-2 transition opacity-60"
-          :class="{ 'active opacity-100 border-[var(--color-accent)]': i === activeIndex }" @click="setActive(i)"
-          :aria-label="'Mostra elemento ' + (i + 1)" :title="'Mostra elemento ' + (i + 1)"
-          :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
-          <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover" />
+        <button v-for="(t, i) in thumbs" :key="t.src + i" class="thumb flex-shrink-0"
+          :class="{ 'active': i === activeIndex }" @click="setActive(i)" :aria-label="'Mostra elemento ' + (i + 1)"
+          :title="'Mostra elemento ' + (i + 1)" :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
+          <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover pointer-events-none" />
         </button>
       </section>
 
@@ -163,31 +165,27 @@ watch(() => route.params.id, fetchPublication)
         class="meta grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 pt-10 border-t border-black/5 dark:border-white/5"
         aria-label="Scheda dettagli pubblicazione">
         <div class="col">
-          <h2 class="text-accent mb-6 uppercase text-sm tracking-widest font-bold">Dati tecnici</h2>
+
           <dl class="meta-list">
-            <div class="meta-item mb-4">
-              <dt class="opacity-50 text-xs uppercase mb-1 font-semibold">Anno</dt>
-              <dd class="text-lg m-0">
-                <p class="m-0">{{ pub.date }}</p>
-              </dd>
-            </div>
-            <div class="meta-item mb-4">
-              <dt class="opacity-50 text-xs uppercase mb-1 font-semibold">Editore</dt>
-              <dd class="text-lg m-0">
-                <p class="m-0">{{ pub.publisher }}</p>
-              </dd>
-            </div>
-            <div v-if="pub.author" class="meta-item mb-4">
-              <dt class="opacity-50 text-xs uppercase mb-1 font-semibold">Autore</dt>
-              <dd class="text-lg m-0">
-                <p class="m-0">{{ pub.author }}</p>
-              </dd>
-            </div>
+            <dt v-if="pub.date" class="meta-label">Anno</dt>
+            <dd v-if="pub.date">
+              <p class="desc">{{ pub.date }}</p>
+            </dd>
+
+            <dt v-if="pub.publisher" class="meta-label">Editore</dt>
+            <dd v-if="pub.publisher">
+              <p class="desc">{{ pub.publisher }}</p>
+            </dd>
+
+            <dt v-if="pub.author" class="meta-label">Autore</dt>
+            <dd v-if="pub.author">
+              <p class="desc">{{ pub.author }}</p>
+            </dd>
           </dl>
         </div>
 
         <div class="col">
-          <h2 class="text-accent mb-6 uppercase text-sm tracking-widest font-bold">Descrizione</h2>
+          <h2 class="meta-label">Descrizione</h2>
           <div class="desc leading-relaxed" v-html="pub.description"></div>
         </div>
       </section>
@@ -236,18 +234,20 @@ watch(() => route.params.id, fetchPublication)
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
   cursor: pointer;
   border: none;
   background: transparent;
 }
 
 .nav:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-radius: 8px;
+  transform: scale(1.05);
 }
 
-:deep(body.dark-mode) .nav:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+:global(.dark) .nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .nav:disabled {
@@ -269,19 +269,43 @@ watch(() => route.params.id, fetchPublication)
   width: 80px;
   height: 112px;
   border-radius: 4px;
-  border-color: transparent;
+  background: transparent;
+  padding: 0;
   cursor: pointer;
+  display: block;
+  border: 2px solid rgba(var(--text-rgb), 0.15) !important;
+  opacity: 0.6;
+  transition: opacity 0.2s ease !important;
 }
 
-.desc {
-  font-size: clamp(1rem, 1.1vw, 1.18rem);
-  line-height: 1.7;
-  white-space: pre-line;
+.thumb.active {
+  border-color: var(--color-accent) !important;
+  opacity: 100 !important;
+  transition: none !important;
+}
+
+/* UNIFICATO: Regola lo stile di tutti i testi di descrizione e dei valori tecnici a sinistra */
+.desc,
+.meta-list dd p {
+  font-size: clamp(0.93rem, 1.05vw, 1.12rem);
+    line-height: 1.8;
+    margin: 0 0 14px;
 }
 
 .meta-list {
   margin: 0;
   padding: 0;
+}
+
+/* BLINDATO CON LE TUE SPECIFICHE: Sincronizzato con l'aspetto di Illustration e Project Detail */
+.meta-label {
+  font-size: clamp(1.25rem, 1.9vw, 1.5rem);
+  margin: 0 0 12px;
+  font-family: var(--font-heading);
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-accent);
+  display: block;
 }
 
 @media (max-width: 768px) {
@@ -290,19 +314,23 @@ watch(() => route.params.id, fetchPublication)
   }
 
   .viewer {
-    grid-template-columns: 1fr;
+    grid-template-columns: 40px 1fr 40px;
+    gap: 8px;
+    margin-bottom: 24px;
   }
 
   .nav {
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0, 0, 0, 0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
+    width: 40px;
+    height: 40px;
+    position: static !important;
+    overflow: visible !important;
+    clip: auto !important;
+    white-space: normal !important;
+  }
+
+  .nav img {
+    width: 20px;
+    height: 20px;
   }
 
   .stage {
@@ -319,8 +347,8 @@ watch(() => route.params.id, fetchPublication)
   }
 
   .thumbs {
-    padding-inline: 0;
-    justify-content: center;
+    padding-inline: 4px;
+    justify-content: flex-start;
   }
 }
 </style>

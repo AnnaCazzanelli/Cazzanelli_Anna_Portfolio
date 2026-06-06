@@ -30,7 +30,7 @@ const filterOptions = ['All', 'Commissione', 'Pubblicazioni', 'Challenge Artisti
 
 /* ==========================================================================
    Logica di Filtraggio e Normalizzazione
-   ========================================================================== */
+   ========================================================================= */
 function normalizeCategory(raw) {
   const s = String(raw || '').trim()
   if (/commissione/i.test(s)) return 'Commissione'
@@ -52,7 +52,7 @@ function setFilter(filter) {
 
 /* ==========================================================================
    Stili Dinamici
-   ========================================================================== */
+   ========================================================================= */
 function getFilterActiveStyle(category) {
   if (category === 'All') {
     return {
@@ -78,7 +78,7 @@ function tagStyle(category) {
 
 /* ==========================================================================
    Fetch dati e Effetti
-   ========================================================================== */
+   ========================================================================= */
 function applyTilt() {
   document.querySelectorAll('.illustration-item').forEach((el) => {
     const tilt = (Math.random() * 2.4 - 1.2).toFixed(2)
@@ -116,7 +116,7 @@ onMounted(getIllustrations)
 </script>
 
 <template>
-  <main class="page-content" aria-labelledby="page-title">
+  <main class="page-content">
     <div class="illustrations-container flex flex-col items-center py-4">
 
       <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region"
@@ -151,12 +151,13 @@ onMounted(getIllustrations)
             class="illustration-item flex flex-col items-center text-center no-underline outline-none"
             :to="{ name: 'illustration-details', params: { id: illustration.id } }"
             :aria-label="ariaLabelFor(illustration)" role="listitem">
-            <figure class="media relative m-0">
+
+            <div class="media relative m-0">
               <img :src="illustration.img" :alt="altFor(illustration)" loading="lazy" class="block max-w-full h-auto" />
-              <figcaption class="cat-badge absolute top-2.5 left-2.5" :style="tagStyle(illustration.category)">
+              <span class="cat-badge absolute top-2.5 left-2.5" :style="tagStyle(illustration.category)">
                 {{ normalizeCategory(illustration.category) }}
-              </figcaption>
-            </figure>
+              </span>
+            </div>
 
             <div class="illustration-details flex flex-col items-center">
               <h3 class="title mt-4 mb-2">{{ illustration.title }}</h3>
@@ -335,7 +336,6 @@ body.dark-mode .hero-image-container {
   box-shadow: 0 1px 2px rgba(var(--text-rgb) / 0.20), 0 8px 20px rgba(var(--text-rgb) / 0.12);
 }
 
-/* UNIFORMATE: Configurate con Flexbox per mantenere l'allineamento matematico perfetto al centro */
 .cat-badge {
   display: inline-flex;
   align-items: center;
@@ -344,8 +344,6 @@ body.dark-mode .hero-image-container {
   border: 1px solid currentColor;
   border-radius: 9999px;
   line-height: normal;
-
-  /* Parametri richiesti: Semibold e 0.95rem */
   font-size: 0.95rem;
   font-weight: var(--font-weight-semibold);
 }
@@ -370,7 +368,6 @@ body.dark-mode .hero-image-container {
   font-size: 1.5rem;
   line-height: 1.5;
 }
-
 
 .tag {
   display: inline-flex;

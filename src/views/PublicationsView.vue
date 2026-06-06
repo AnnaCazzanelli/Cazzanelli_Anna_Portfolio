@@ -36,7 +36,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="page-content" aria-labelledby="page-title">
+  <main class="page-content">
     <div class="publications-page-wrapper flex flex-col items-center py-4">
 
       <section class="hero-container relative w-full overflow-hidden" role="region" aria-labelledby="page-title">
@@ -63,6 +63,7 @@ onMounted(() => {
             :to="{ name: 'publication-details', params: { id: pub.id } }"
             class="pub-card group w-full max-w-[380px] no-underline block"
             :aria-label="`Leggi i dettagli di: ${pub.title || 'Pubblicazione'}`" role="listitem">
+
             <div
               class="cover-container overflow-hidden mb-6 shadow-md transition-transform duration-500 group-hover:scale-[1.01]">
               <img :src="pub.main_image" :alt="pub.title ? `Copertina di: ${pub.title}` : 'Copertina pubblicazione'"
@@ -70,8 +71,10 @@ onMounted(() => {
             </div>
 
             <div class="text-center px-4">
-              <h3 class="title mt-4 mb-2">{{ pub.title || 'Senza titolo' }}</h3>
-              <p class="pub-info">{{ pub.publisher }} , {{ pub.date }}</p>
+              <h3 class="mt-4">{{ pub.title || 'Senza titolo' }}</h3>
+              <p class="pub-info">
+                <template v-if="pub.publisher">{{ pub.publisher }} &middot; </template>{{ pub.date }}
+              </p>
             </div>
           </RouterLink>
         </div>

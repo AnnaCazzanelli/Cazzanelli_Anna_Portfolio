@@ -156,9 +156,9 @@ watch(() => route.params.id, fetchIllustration)
           <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
-        <figure class="stage bg-[var(--color-surface)] min-h-[420px] grid place-items-center overflow-hidden">
+        <div class="stage bg-[var(--color-surface)] min-h-[420px] grid place-items-center overflow-hidden">
           <img :src="illustration.img" :alt="altText" class="stage-img block w-auto max-w-full" loading="eager" />
-        </figure>
+        </div>
 
         <button class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
                  hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
@@ -173,16 +173,12 @@ watch(() => route.params.id, fetchIllustration)
       <section class="meta grid gap-[72px] mt-4" aria-label="Scheda tecnica dell'opera">
         <div class="col">
           <dl class="meta-list">
-            <dt v-if="illustration.year">
-              <h2 class="meta-label">Data</h2>
-            </dt>
+            <dt v-if="illustration.year" class="meta-label">Data</dt>
             <dd v-if="illustration.year">
               <p>{{ illustration.year }}</p>
             </dd>
 
-            <dt>
-              <h2 class="meta-label">Tipo di progetto</h2>
-            </dt>
+            <dt class="meta-label">Tipo di progetto</dt>
             <dd>
               <p>
                 <span class="pill" :style="pillStyle">
@@ -191,9 +187,7 @@ watch(() => route.params.id, fetchIllustration)
               </p>
             </dd>
 
-            <dt v-if="illustration.tag?.length">
-              <h2 class="meta-label">Tag</h2>
-            </dt>
+            <dt v-if="illustration.tag?.length" class="meta-label">Tag</dt>
             <dd v-if="illustration.tag?.length">
               <ul class="tags" aria-label="Tag dell’illustrazione">
                 <li v-for="t in illustration.tag" :key="t" class="pill" :style="pillStyle">
@@ -202,9 +196,7 @@ watch(() => route.params.id, fetchIllustration)
               </ul>
             </dd>
 
-            <dt v-if="illustration.tools">
-              <h2 class="meta-label">Tecnica (Tools)</h2>
-            </dt>
+            <dt v-if="illustration.tools" class="meta-label">Tecnica (Tools)</dt>
             <dd v-if="illustration.tools">
               <p>{{ illustration.tools }}</p>
             </dd>
@@ -313,8 +305,10 @@ watch(() => route.params.id, fetchIllustration)
 .meta-label {
   font-size: clamp(1.25rem, 1.9vw, 1.5rem);
   margin: 0 0 12px;
-  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-style: normal;
   font-weight: 700;
+  color: var(--color-accent)
 }
 
 .desc,
@@ -336,13 +330,13 @@ watch(() => route.params.id, fetchIllustration)
 
 .pill {
   display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 16px;
-    border-radius: 999px;
-    font-size: 0.95rem;
-    font-weight: var(--font-weight-semibold);
-    line-height: normal;
-    border: 1px solid currentColor;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-semibold);
+  line-height: normal;
+  border: 1px solid currentColor;
 }
 </style>

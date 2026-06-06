@@ -1,5 +1,8 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+/* ==========================================================================
+   Import e configurazione
+   ========================================================================== */
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { db } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import emailjs from '@emailjs/browser'
@@ -38,6 +41,40 @@ function closeConfirm() {
   }
 }
 
+/* GESTIONE FOCUS ACCESSIBILE PER LA MODALE (FOCUS TRAP) */
+watch(showConfirm, async (newVal) => {
+  if (newVal) {
+    await nextTick()
+    // Sposta il focus sul pulsante di conferma dentro la modale per l'utente con tastiera
+    const confirmBtn = document.querySelector('.modal-btn.confirm')
+    if (confirmBtn) confirmBtn.focus()
+  }
+})
+
+// Impedisce al tasto Tab di uscire dalla modale finché è aperta
+function trapFocus(e) {
+  if (!showConfirm.value) return
+  if (e.key === 'Tab') {
+    const modal = document.querySelector('.modal-card')
+    if (!modal) return
+    const focusableElements = modal.querySelectorAll('button, [tabindex="0"]')
+    const firstElements = focusableElements[0]
+    const lastElements = focusableElements[focusableElements.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === firstElements) {
+        lastElements.focus()
+        e.preventDefault()
+      }
+    } else {
+      if (document.activeElement === lastElements) {
+        firstElements.focus()
+        e.preventDefault()
+      }
+    }
+  }
+}
+
 /* User-Agent per diagnostica su Firestore */
 function getUserAgent() {
   if (typeof navigator !== 'undefined' && navigator.userAgent) {
@@ -69,7 +106,7 @@ function preSubmit(e) {
   openConfirm()
 }
 
-/* Conferma: invio su Firestore + Notifica Email Sicura con Chiave Privata */
+/* Conferma: invio su Firestore + Notifica Email */
 async function confirmSend() {
   loading.value = true
   errorMsg.value = ''
@@ -112,6 +149,11 @@ async function confirmSend() {
     message.value = ''
     honeypot.value = ''
     closeConfirm()
+
+    // Sposta il focus sul messaggio di successo globale
+    await nextTick()
+    const successBanner = document.getElementById('success-desc')
+    if (successBanner) successBanner.focus()
   } catch (err) {
     console.error("Errore durante l'invio:", err)
     errorMsg.value = err?.message || 'Invio non riuscito. Riprova.'
@@ -121,11 +163,14 @@ async function confirmSend() {
   }
 }
 
-/* Escape per chiudere la modale */
+/* Gestione tastiera globale */
 function onKeydown(ev) {
-  if (showConfirm.value && ev.key === 'Escape') {
-    ev.preventDefault()
-    closeConfirm()
+  if (showConfirm.value) {
+    if (ev.key === 'Escape') {
+      ev.preventDefault()
+      closeConfirm()
+    }
+    trapFocus(ev)
   }
 }
 
@@ -154,16 +199,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         Compila il form qui sotto, ti contatterò al più presto.
       </p>
 
-      <p v-if="success" id="success-desc" class="form-success" role="status" aria-live="polite">
+      <p v-if="success" id="success-desc" class="form-success outline-none" role="status" aria-live="polite"
+        tabindex="-1">
         ✅ Messaggio inviato, grazie! ti contatterò al più presto.
       </p>
 
-      <p v-if="errorMsg" id="error-desc" class="form-error" role="alert">
+      <p v-if="errorMsg" id="error-desc" class="form-error" role="alert" aria-live="assertive">
         ⚠️ {{ errorMsg }}
       </p>
 
       <form class="contact-form" @submit="preSubmit" novalidate
         :aria-describedby="success ? 'success-desc' : (errorMsg ? 'error-desc' : null)">
+
         <div class="hp-wrap" aria-hidden="true">
           <label for="hp">Lascia questo campo vuoto</label>
           <input id="hp" v-model="honeypot" type="text" tabindex="-1" autocomplete="off" />

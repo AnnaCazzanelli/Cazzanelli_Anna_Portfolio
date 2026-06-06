@@ -1,4 +1,7 @@
 <script setup>
+/* ==========================================================================
+   Import e Stato
+   ========================================================================== */
 import { RouterLink } from 'vue-router'
 import Handwave from '@/components/Handwave.vue'
 
@@ -222,7 +225,7 @@ watch(illustrations, async () => {
 </script>
 
 <template>
-  <main class="bg-surface text-text pt-2 pb-16">
+  <main class="page-content bg-surface text-text pt-2 pb-16">
     <section class="hero mx-auto max-w-[1280px] px-desktop pt-8 pb-14 grid items-center gap-14" role="region"
       aria-labelledby="home-title">
       <article class="min-w-0">
@@ -266,21 +269,22 @@ watch(illustrations, async () => {
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2" aria-label="Carosello progetti selezionati">
         <button class="nav" type="button" @click="prevProj" :disabled="projPrevDisabled"
           aria-label="Progetto precedente" title="Precedente">
-          <img src="/icone/icon-prev.svg" class="icon" alt="" />
+          <img src="/icone/icon-prev.svg" class="icon" alt="" aria-hidden="true" />
         </button>
 
         <div class="carousel-viewport" ref="projViewport">
-          <div class="carousel-track" ref="projTrack">
+          <div class="carousel-track" ref="projTrack" role="list">
             <RouterLink v-for="p in projects" :key="p.firestoreId" class="card"
               :to="{ name: 'project-details', params: { id: p.firestoreId } }"
               :aria-label="`Apri progetto: ${p.title || p.firestoreId}`"
-              :title="`Apri progetto: ${p.title || 'Senza titolo'}`">
-              <figure class="card-frame" aria-label="Anteprima progetto">
+              :title="`Apri progetto: ${p.title || 'Senza titolo'}`" role="listitem">
+
+              <div class="card-frame">
                 <img :src="p.img || p.main_image"
                   :alt="p.title ? `Anteprima progetto: ${p.title}` : 'Anteprima progetto'" loading="lazy" />
-              </figure>
+              </div>
 
-              <h3 class="card-title">
+              <h3 class="card-title ">
                 {{ p.title || 'Senza titolo' }}
               </h3>
             </RouterLink>
@@ -289,7 +293,7 @@ watch(illustrations, async () => {
 
         <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled" aria-label="Prossimo progetto"
           title="Successivo">
-          <img src="/icone/icon-next.svg" class="icon" alt="" />
+          <img src="/icone/icon-next.svg" class="icon" alt="" aria-hidden="true" />
         </button>
       </div>
 
@@ -297,7 +301,7 @@ watch(illustrations, async () => {
         <RouterLink to="/projects" class="cta-see-all" aria-label="Vai alla pagina Progetti per vedere tutto"
           title="Vedi tutti i progetti">
           <span>Scopri di più</span>
-          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
+          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" aria-hidden="true" />
         </RouterLink>
       </div>
     </section>
@@ -319,15 +323,15 @@ watch(illustrations, async () => {
         aria-label="Carosello illustrazioni selezionate">
         <button class="nav" type="button" @click="prevIll" :disabled="illPrevDisabled"
           aria-label="Illustrazione precedente" title="Precedente">
-          <img src="/icone/icon-prev.svg" class="icon" alt="" />
+          <img src="/icone/icon-prev.svg" class="icon" alt="" aria-hidden="true" />
         </button>
 
         <div class="carousel-viewport" ref="illViewport">
-          <div class="carousel-track" ref="illTrack">
+          <div class="carousel-track" ref="illTrack" role="list">
             <RouterLink v-for="i in illustrations" :key="i.firestoreId" class="card-illustration"
               :to="{ name: 'illustration-details', params: { id: i.firestoreId } }"
               :aria-label="`Apri illustrazione: ${i.title || i.firestoreId}`"
-              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`">
+              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`" role="listitem">
               <img :src="i.img || i.main_image"
                 :alt="i.title ? `Anteprima illustrazione: ${i.title}` : 'Anteprima illustrazione'" loading="lazy" />
             </RouterLink>
@@ -336,7 +340,7 @@ watch(illustrations, async () => {
 
         <button class="nav" type="button" @click="nextIll" :disabled="illNextDisabled"
           aria-label="Prossima illustrazione" title="Successivo">
-          <img src="/icone/icon-next.svg" class="icon" alt="" />
+          <img src="/icone/icon-next.svg" class="icon" alt="" aria-hidden="true" />
         </button>
       </div>
 
@@ -344,7 +348,7 @@ watch(illustrations, async () => {
         <RouterLink to="/illustrations" class="cta-see-all" aria-label="Vai alla pagina Illustrazioni per vedere tutto"
           title="Vedi tutte le illustrazioni">
           <span>Scopri di più</span>
-          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
+          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" aria-hidden="true" />
         </RouterLink>
       </div>
     </section>
@@ -387,7 +391,6 @@ watch(illustrations, async () => {
 .title {
   font-size: clamp(48px, 6.5vw, 84px);
   margin-bottom: 16px;
-  /* Avvicinato ad h3 su desktop */
 }
 
 .subtitle {
@@ -411,7 +414,6 @@ watch(illustrations, async () => {
   .title {
     font-size: 34px !important;
     margin-bottom: 4px !important;
-    /* Avvicinato di un bel po ad h3 su mobile */
   }
 
   .subtitle {
@@ -421,7 +423,6 @@ watch(illustrations, async () => {
 
   .role {
     font-size: 15px !important;
-    /* Ridotto di pochi punti per mobile */
     margin-bottom: 16px;
     line-height: 1.25;
     white-space: nowrap !important;
@@ -447,11 +448,8 @@ watch(illustrations, async () => {
 @media (max-width: 1024px) {
   .hand-wrap {
     width: clamp(240px, 32vw, 360px);
-    /* Ridotta leggermente per evitare collisioni sui 606px */
     margin-top: 140px;
-    /* Spostata più in giù */
     margin-right: -10px;
-    /* Spostata più a destra */
   }
 }
 
@@ -459,9 +457,7 @@ watch(illustrations, async () => {
   .hand-wrap {
     width: clamp(140px, 34vw, 220px);
     margin-top: 150px;
-    /* Abbassata per raccordarsi alla correzione dei 480px */
     margin-right: -20px;
-    /* Spostata più a destra */
   }
 }
 
@@ -469,9 +465,7 @@ watch(illustrations, async () => {
   .hand-wrap {
     width: clamp(140px, 34vw, 220px);
     margin-top: 160px;
-    /* Mantenuta la tua correzione perfetta */
     margin-right: -24px;
-    /* Mantenuta la tua correzione perfetta */
   }
 }
 
@@ -521,13 +515,11 @@ watch(illustrations, async () => {
 }
 
 /* Slider */
-/* Titolo sezione */
 .section-title {
   font-size: clamp(22px, 2.6vw, 32px);
   line-height: 1.2;
 }
 
-/* Mobile: titoli slideshow centrati */
 @media (max-width: 600px) {
   .section-title {
     text-align: center;
@@ -681,5 +673,17 @@ watch(illustrations, async () => {
   height: 22px;
   flex-shrink: 0;
   display: block;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 </style>
