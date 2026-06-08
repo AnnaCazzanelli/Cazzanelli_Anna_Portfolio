@@ -242,8 +242,9 @@ watch(illustrations, async () => {
           Se vuoi saperne di più di me
         </p>
 
+        <!-- RIPRISTINATO: Testo originale "Clicca qui" con aria-label accessibile e nessun title -->
         <RouterLink to="/about" class="cta hero-btn whitespace-nowrap"
-          aria-label="Vai alla pagina About per saperne di più su di me" title="Scopri di più">
+          aria-label="Clicca qui per saperne di più su Anna Cazzanelli">
           Clicca qui
         </RouterLink>
       </div>
@@ -269,7 +270,7 @@ watch(illustrations, async () => {
 
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevProj" :disabled="projPrevDisabled"
-          aria-label="Progetto precedente" title="Precedente">
+          aria-label="Progetto precedente">
           <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
@@ -293,15 +294,13 @@ watch(illustrations, async () => {
           </div>
         </div>
 
-        <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled" aria-label="Prossimo progetto"
-          title="Successivo">
+        <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled" aria-label="Prossimo progetto">
           <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
-        <RouterLink to="/projects" class="cta-see-all" 
- >
+        <RouterLink to="/projects" class="cta-see-all">
           <span>Vedi tutti i progetti</span>
           <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
@@ -323,7 +322,7 @@ watch(illustrations, async () => {
 
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevIll" :disabled="illPrevDisabled"
-          aria-label="Illustrazione precedente" title="Precedente">
+          aria-label="Illustrazione precedente">
           <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
@@ -342,14 +341,13 @@ watch(illustrations, async () => {
         </div>
 
         <button class="nav" type="button" @click="nextIll" :disabled="illNextDisabled"
-          aria-label="Prossima illustrazione" title="Successivo">
+          aria-label="Prossima illustrazione">
           <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
-        <RouterLink to="/illustrations" class="cta-see-all" 
-       >
+        <RouterLink to="/illustrations" class="cta-see-all">
           <span>Vedi tutte le illustrazioni</span>
           <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>

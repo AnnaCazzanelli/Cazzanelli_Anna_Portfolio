@@ -26,9 +26,9 @@ import { RouterLink } from 'vue-router'
         <!-- CORRETTO (Best Practice 5 & 7): Aggiornata l'etichetta mail per avvisare del comportamento esterno e ripuliti i title social -->
         <div class="flex items-center gap-4 md:gap-4 justify-center md:justify-end w-full md:w-auto"
           aria-label="Canali Social">
-          <a href="mailto:anna.cazzanelli1@gmail.com" target="_blank" rel="noopener" class="footer-link"
-            aria-label="Invia una email a Anna Cazzanelli (apre il client di posta elettronica)">
-            <img src="/icone/icon-email.svg" alt="" class="social-icn" aria-hidden="true" />
+         <a href="mailto:anna.cazzanelli1@gmail.com" class="footer-link"
+            aria-label="Invia un'email a Anna Cazzanelli. L'azione aprirà l'applicazione di posta elettronica predefinita sul tuo dispositivo.">
+            <img src="/icone/icon-email.svg" alt="Email" class="social-icn" />
           </a>
 
           <a href="https://www.instagram.com/annaredpan/" target="_blank" rel="noopener" class="footer-link"
