@@ -149,7 +149,7 @@ onMounted(getIllustrations)
         <div class="illustration-grid grid gap-12 py-8" role="list">
           <RouterLink v-for="illustration in filteredIllustrations" :key="illustration.id"
             class="illustration-item flex flex-col items-center text-center no-underline outline-none"
-            :to="{ name: 'illustration-details', params: { id: illustration.id } }"
+            :to="`/illustrations/${illustration.id}`"
             :aria-label="ariaLabelFor(illustration)" role="listitem">
 
             <div class="media relative m-0">

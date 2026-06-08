@@ -146,7 +146,7 @@ async function getProjects() {
         role="list" aria-label="Elenco dei progetti filtrati">
         <RouterLink v-for="p in filteredProjects" :key="p.firestoreId"
           class="project-item no-underline text-inherit flex flex-col items-center text-center cursor-pointer outline-none"
-          :to="{ name: 'project-details', params: { id: p.firestoreId } }" :aria-label="ariaLabelFor(p)"
+         :to="`/projects/${p.firestoreId}`"
           role="listitem">
 
           <div class="relative w-full aspect-[1200/800] overflow-hidden bg-[var(--color-surface)] m-0">

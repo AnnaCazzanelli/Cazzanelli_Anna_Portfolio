@@ -275,7 +275,7 @@ watch(illustrations, async () => {
         <div class="carousel-viewport" ref="projViewport">
           <div class="carousel-track" ref="projTrack" role="list">
             <RouterLink v-for="p in projects" :key="p.firestoreId" class="card"
-              :to="{ name: 'project-details', params: { id: p.firestoreId } }"
+            :to="`/projects/${p.firestoreId}`"
               :aria-label="`Apri progetto: ${p.title || p.firestoreId}`"
               :title="`Apri progetto: ${p.title || 'Senza titolo'}`" role="listitem">
 
@@ -329,7 +329,7 @@ watch(illustrations, async () => {
         <div class="carousel-viewport" ref="illViewport">
           <div class="carousel-track" ref="illTrack" role="list">
             <RouterLink v-for="i in illustrations" :key="i.firestoreId" class="card-illustration"
-              :to="{ name: 'illustration-details', params: { id: i.firestoreId } }"
+              :to="`/illustrations/${i.firestoreId}`"
               :aria-label="`Apri illustrazione: ${i.title || i.firestoreId}`"
               :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`" role="listitem">
               <img :src="i.img || i.main_image"
