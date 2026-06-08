@@ -145,7 +145,7 @@ onMounted(getIllustrations)
       </section>
 
       <section class="illustration-content-wrapper w-full max-w-[1400px]" role="region"
-        aria-label="Galleria illustrazioni">
+>
         <div class="illustration-grid grid gap-12 py-8" role="list">
           <RouterLink v-for="illustration in filteredIllustrations" :key="illustration.id"
             class="illustration-item flex flex-col items-center text-center no-underline outline-none"

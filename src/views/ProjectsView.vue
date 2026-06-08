@@ -143,7 +143,7 @@ async function getProjects() {
 
       <section v-else
         class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 md:gap-y-20 max-w-[1400px] w-full mt-0 mb-12 px-[var(--margin-desktop)]"
-        role="list" aria-label="Elenco dei progetti filtrati">
+        role="list">
         <RouterLink v-for="p in filteredProjects" :key="p.firestoreId"
           class="project-item no-underline text-inherit flex flex-col items-center text-center cursor-pointer outline-none"
          :to="`/projects/${p.firestoreId}`"

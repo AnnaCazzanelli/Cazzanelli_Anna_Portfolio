@@ -58,7 +58,7 @@ onMounted(() => {
 
         <div v-else-if="publications.length"
           class="pub-grid grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16 justify-items-center" role="list"
-          aria-label="Raccolta pubblicazioni">
+>
           <RouterLink v-for="pub in publications" :key="pub.id"
           :to="`/publications/${pub.id}`"
             class="pub-card group w-full max-w-[380px] no-underline block"

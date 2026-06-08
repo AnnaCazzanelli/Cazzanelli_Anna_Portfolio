@@ -266,7 +266,7 @@ watch(illustrations, async () => {
         {{ error }}
       </p>
 
-      <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2" aria-label="Carosello progetti selezionati">
+      <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevProj" :disabled="projPrevDisabled"
           aria-label="Progetto precedente" title="Precedente">
           <img src="/icone/icon-prev.svg" class="icon" alt="" aria-hidden="true" />
@@ -319,8 +319,7 @@ watch(illustrations, async () => {
         {{ error }}
       </p>
 
-      <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2"
-        aria-label="Carosello illustrazioni selezionate">
+      <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevIll" :disabled="illPrevDisabled"
           aria-label="Illustrazione precedente" title="Precedente">
           <img src="/icone/icon-prev.svg" class="icon" alt="" aria-hidden="true" />
