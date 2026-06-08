@@ -9,14 +9,18 @@ const route = useRoute()
 
 <template>
   <div class="app-wrapper">
-    <Navbar />
+    <header>
+      <Navbar />
+    </header>
+
     <RouterView />
 
-    <!-- Mostra CTA e Footer solo se non sei nella pagina Contatti -->
     <template v-if="route.name !== 'contacts'">
       <CtaSection />
-      
     </template>
-    <Footer />
+
+    <footer class="footer-global-wrapper">
+      <Footer />
+    </footer>
   </div>
 </template>

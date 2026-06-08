@@ -1,35 +1,22 @@
-<!-- src/components/CtaSection.vue -->
 <script setup>
 import { RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <section
-    role="region"
-    aria-labelledby="cta-title"
-    class="relative mx-auto grid place-content-center justify-items-center gap-6
+  <section role="region" aria-labelledby="cta-title" class="relative mx-auto grid place-content-center justify-items-center gap-6
            px-4 py-6 md:px-8 md:py-10
            bg-surface text-text
            border-t-2 border-[var(--color-accent)]
-           min-h-[clamp(260px,32vh,420px)] md:min-h-[clamp(220px,40vh,360px)]"
-  >
-    <!-- Titolo nascosto per accessibilità -->
+           min-h-[clamp(260px,32vh,420px)] md:min-h-[clamp(220px,40vh,360px)]">
     <h2 id="cta-title" class="sr-only">Contatti</h2>
 
-    <!-- Testo introduttivo -->
     <p class="cta-text m-0 text-center opacity-90">
       Per lavori su commissione, collaborazioni...
     </p>
 
-    <!-- Pulsante principale -->
-    <RouterLink
-      to="/contacts"
-      class="cta-btn inline-block px-7 py-4 font-bold leading-none
+    <RouterLink to="/contacts" class="cta-btn inline-block px-7 py-4 leading-none
              text-[18px] border border-[var(--color-accent)] no-underline
-             transition-[transform,background-color,color] duration-200"
-      aria-label="Vai alla pagina contatti"
-      title="Contattami"
-    >
+             transition-[transform,background-color,color,font-weight] duration-200" title="Contattami">
       Contattami ora
     </RouterLink>
 
@@ -43,6 +30,7 @@ import { RouterLink } from 'vue-router'
   line-height: 1.7;
   white-space: nowrap;
 }
+
 @media (min-width: 768px) {
   .cta-text {
     white-space: normal;
@@ -51,16 +39,21 @@ import { RouterLink } from 'vue-router'
 
 /* Pulsante principale */
 .cta-btn {
+  font-weight: 500;
   background-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
   color: var(--color-text);
 }
+
 .cta-btn:hover {
+  font-weight: 700;
   background-color: var(--color-hover);
   color: var(--color-surface);
 }
+
 .cta-btn:active {
   transform: scale(0.98);
 }
+
 .cta-btn:focus-visible {
   outline: 3px solid var(--color-accent);
   outline-offset: 3px;
@@ -74,6 +67,7 @@ import { RouterLink } from 'vue-router'
   padding-bottom: 2px;
   transition: color 0.2s ease, border-color 0.2s ease;
 }
+
 .cta-link:hover {
   color: var(--color-hover);
   border-color: var(--color-hover);
