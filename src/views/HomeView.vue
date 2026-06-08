@@ -228,7 +228,8 @@ watch(illustrations, async () => {
   <main class="page-content bg-surface text-text pt-2 pb-16">
     <section class="hero mx-auto max-w-[1280px] px-desktop pt-8 pb-14 grid items-center gap-14" role="region"
       aria-labelledby="home-title">
-      <article class="min-w-0">
+
+      <div class="min-w-0">
         <h1 id="home-title" class="title m-0 text-accent font-extrabold leading-[1.1] whitespace-nowrap">
           Anna Cazzanelli
         </h1>
@@ -245,9 +246,9 @@ watch(illustrations, async () => {
           aria-label="Vai alla pagina About per saperne di più su di me" title="Scopri di più">
           Clicca qui
         </RouterLink>
-      </article>
+      </div>
 
-      <div class="hand-wrap justify-self-end -mt-10" aria-hidden="true">
+      <div class="hand-wrap justify-self-end -mt-10">
         <Handwave :canvas-width="900" :canvas-height="900" />
       </div>
     </section>
@@ -269,15 +270,16 @@ watch(illustrations, async () => {
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevProj" :disabled="projPrevDisabled"
           aria-label="Progetto precedente" title="Precedente">
-          <img src="/icone/icon-prev.svg" class="icon" alt="" aria-hidden="true" />
+          <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
         <div class="carousel-viewport" ref="projViewport">
           <div class="carousel-track" ref="projTrack" role="list">
-            <RouterLink v-for="p in projects" :key="p.firestoreId" class="card"
-            :to="`/projects/${p.firestoreId}`"
-              :aria-label="`Apri progetto: ${p.title || p.firestoreId}`"
-              :title="`Apri progetto: ${p.title || 'Senza titolo'}`" role="listitem">
+            <RouterLink v-for="(p, index) in projects" :key="p.firestoreId" class="card"
+              :to="`/projects/${p.firestoreId}`" :aria-label="`Apri progetto: ${p.title || p.firestoreId}`"
+              :title="`Apri progetto: ${p.title || 'Senza titolo'}`" role="listitem"
+              :aria-hidden="index < projIndex || index >= projIndex + visibleCount ? 'true' : null"
+              :tabindex="index < projIndex || index >= projIndex + visibleCount ? '-1' : '0'">
 
               <div class="card-frame">
                 <img :src="p.img || p.main_image"
@@ -293,15 +295,15 @@ watch(illustrations, async () => {
 
         <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled" aria-label="Prossimo progetto"
           title="Successivo">
-          <img src="/icone/icon-next.svg" class="icon" alt="" aria-hidden="true" />
+          <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
-        <RouterLink to="/projects" class="cta-see-all" aria-label="Vai alla pagina Progetti per vedere tutto"
-          title="Vedi tutti i progetti">
-          <span>Scopri di più</span>
-          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" aria-hidden="true" />
+        <RouterLink to="/projects" class="cta-see-all" 
+ >
+          <span>Vedi tutti i progetti</span>
+          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
       </div>
     </section>
@@ -322,15 +324,17 @@ watch(illustrations, async () => {
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevIll" :disabled="illPrevDisabled"
           aria-label="Illustrazione precedente" title="Precedente">
-          <img src="/icone/icon-prev.svg" class="icon" alt="" aria-hidden="true" />
+          <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
         <div class="carousel-viewport" ref="illViewport">
           <div class="carousel-track" ref="illTrack" role="list">
-            <RouterLink v-for="i in illustrations" :key="i.firestoreId" class="card-illustration"
-              :to="`/illustrations/${i.firestoreId}`"
-              :aria-label="`Apri illustrazione: ${i.title || i.firestoreId}`"
-              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`" role="listitem">
+            <RouterLink v-for="(i, index) in illustrations" :key="i.firestoreId" class="card-illustration"
+              :to="`/illustrations/${i.firestoreId}`" :aria-label="`Apri illustrazione: ${i.title || i.firestoreId}`"
+              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`" role="listitem"
+              :aria-hidden="index < illSnapIndex || index >= illSnapIndex + 1 ? 'true' : null"
+              :tabindex="index < illSnapIndex || index >= illSnapIndex + 1 ? '-1' : '0'">
+
               <img :src="i.img || i.main_image"
                 :alt="i.title ? `Anteprima illustrazione: ${i.title}` : 'Anteprima illustrazione'" loading="lazy" />
             </RouterLink>
@@ -339,15 +343,15 @@ watch(illustrations, async () => {
 
         <button class="nav" type="button" @click="nextIll" :disabled="illNextDisabled"
           aria-label="Prossima illustrazione" title="Successivo">
-          <img src="/icone/icon-next.svg" class="icon" alt="" aria-hidden="true" />
+          <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
-        <RouterLink to="/illustrations" class="cta-see-all" aria-label="Vai alla pagina Illustrazioni per vedere tutto"
-          title="Vedi tutte le illustrazioni">
-          <span>Scopri di più</span>
-          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" aria-hidden="true" />
+        <RouterLink to="/illustrations" class="cta-see-all" 
+       >
+          <span>Vedi tutte le illustrazioni</span>
+          <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
       </div>
     </section>
@@ -607,7 +611,6 @@ watch(illustrations, async () => {
   font-weight: 700;
   text-align: center;
   color: var(--color-accent);
- 
 }
 
 .card:hover .card-title {

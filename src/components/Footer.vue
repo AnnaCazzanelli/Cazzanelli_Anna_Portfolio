@@ -6,42 +6,43 @@ import { RouterLink } from 'vue-router'
   <div class="site-footer text-text border-t-2" :style="{ borderColor: 'var(--color-accent)' }">
     <div class="mx-auto max-w-[1280px] px-desktop md:py-6 py-5 flex flex-col gap-3 md:gap-4">
       <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-        <nav class="flex flex-wrap justify-center md:justify-start items-center gap-4 md:gap-6
-                 text-[13px] sm:text-[14px] md:text-base" aria-label="Navigazione secondaria">
-          <RouterLink to="/" class="footer-link hover:text-hover" title="Home">Home</RouterLink>
 
-          <RouterLink to="/about" class="footer-link hover:text-hover" title="About">About</RouterLink>
+        <!-- CORRETTO (Punto 29 & Best Practice 7): Sostituito tag <nav> con <div> e rimossi i "title" ridondanti dai link testuali -->
+        <div
+          class="flex flex-wrap justify-center md:justify-start items-center gap-4 md:gap-6 text-[13px] sm:text-[14px] md:text-base">
+          <RouterLink to="/" class="footer-link hover:text-hover">Home</RouterLink>
 
-          <RouterLink to="/publications" class="footer-link hover:text-hover" title="Pubblicazioni">Pubblicazioni
-          </RouterLink>
+          <RouterLink to="/about" class="footer-link hover:text-hover">About</RouterLink>
 
-          <RouterLink to="/projects" class="footer-link hover:text-hover" title="Progetti">Progetti</RouterLink>
+          <RouterLink to="/publications" class="footer-link hover:text-hover">Pubblicazioni</RouterLink>
 
-          <RouterLink to="/illustrations" class="footer-link hover:text-hover" title="Illustrazioni">Illustrazioni
-          </RouterLink>
+          <RouterLink to="/projects" class="footer-link hover:text-hover">Progetti</RouterLink>
 
-          <RouterLink to="/contacts" class="footer-link hover:text-hover" title="Contatti">Contatti</RouterLink>
-        </nav>
+          <RouterLink to="/illustrations" class="footer-link hover:text-hover">Illustrazioni</RouterLink>
 
+          <RouterLink to="/contacts" class="footer-link hover:text-hover">Contatti</RouterLink>
+        </div>
+
+        <!-- CORRETTO (Best Practice 5 & 7): Aggiornata l'etichetta mail per avvisare del comportamento esterno e ripuliti i title social -->
         <div class="flex items-center gap-4 md:gap-4 justify-center md:justify-end w-full md:w-auto"
           aria-label="Canali Social">
-          <a href="mailto:anna.cazzanelli1@gmail.com" target="_blank" rel="noopener" class="footer-link" title="Email"
-            aria-label="Invia una email a Anna Cazzanelli">
+          <a href="mailto:anna.cazzanelli1@gmail.com" target="_blank" rel="noopener" class="footer-link"
+            aria-label="Invia una email a Anna Cazzanelli (apre il client di posta elettronica)">
             <img src="/icone/icon-email.svg" alt="" class="social-icn" aria-hidden="true" />
           </a>
 
           <a href="https://www.instagram.com/annaredpan/" target="_blank" rel="noopener" class="footer-link"
-            title="Instagram" aria-label="Profilo Instagram di Anna Cazzanelli">
+            aria-label="Profilo Instagram di Anna Cazzanelli">
             <img src="/icone/icon-instagram.svg" alt="" class="social-icn" aria-hidden="true" />
           </a>
 
           <a href="https://www.linkedin.com/in/anna-cazzanelli-a193a6276/" target="_blank" rel="noopener"
-            class="footer-link" title="LinkedIn" aria-label="Profilo LinkedIn di Anna Cazzanelli">
+            class="footer-link" aria-label="Profilo LinkedIn di Anna Cazzanelli">
             <img src="/icone/icon-linkedin.svg" alt="" class="social-icn" aria-hidden="true" />
           </a>
 
           <a href="https://www.behance.net/cazzanellianna" target="_blank" rel="noopener" class="footer-link"
-            title="Behance" aria-label="Profilo Behance di Anna Cazzanelli">
+            aria-label="Profilo Behance di Anna Cazzanelli">
             <img src="/icone/icon-behance.svg" alt="" class="social-icn" aria-hidden="true" />
           </a>
         </div>

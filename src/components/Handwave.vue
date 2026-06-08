@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- Il canvas riempie la larghezza del contenitore -->
-  <canvas ref="canvasRef" role="img" aria-label="Mano che saluta"></canvas>
+  <canvas ref="canvasRef" ></canvas>
 </template>
 
 <style scoped>

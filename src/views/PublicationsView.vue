@@ -195,7 +195,7 @@ body.dark-mode .hero-image-container {
   }
 
   .pub-grid {
-    gap-y: 40px;
+    gap: 40px;
   }
 }
 </style>
