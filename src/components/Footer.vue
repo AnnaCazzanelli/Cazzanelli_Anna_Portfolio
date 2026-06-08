@@ -27,23 +27,23 @@ import { RouterLink } from 'vue-router'
         <div class="flex items-center gap-4 md:gap-4 justify-center md:justify-end w-full md:w-auto"
           aria-label="Canali Social">
          <a href="mailto:anna.cazzanelli1@gmail.com" class="footer-link"
-            aria-label="Invia un'email a Anna Cazzanelli. L'azione aprirà l'applicazione di posta elettronica predefinita sul tuo dispositivo.">
+            aria-label="Invia un email a Anna Cazzanelli - Apre il client di posta">
             <img src="/icone/icon-email.svg" alt="Email" class="social-icn" />
           </a>
 
-          <a href="https://www.instagram.com/annaredpan/" target="_blank" rel="noopener" class="footer-link"
-            aria-label="Profilo Instagram di Anna Cazzanelli">
-            <img src="/icone/icon-instagram.svg" alt="" class="social-icn" aria-hidden="true" />
+        <a href="https://www.instagram.com/annaredpan/" target="_blank" rel="noopener" class="footer-link"
+            aria-label="Profilo Instagram di Anna Cazzanelli - Si apre in una nuova scheda">
+            <img src="/icone/icon-instagram.svg" alt="Instagram" class="social-icn" />
           </a>
 
           <a href="https://www.linkedin.com/in/anna-cazzanelli-a193a6276/" target="_blank" rel="noopener"
-            class="footer-link" aria-label="Profilo LinkedIn di Anna Cazzanelli">
-            <img src="/icone/icon-linkedin.svg" alt="" class="social-icn" aria-hidden="true" />
+            class="footer-link" aria-label="Profilo LinkedIn di Anna Cazzanelli - Si apre in una nuova scheda">
+            <img src="/icone/icon-linkedin.svg" alt="LinkedIn" class="social-icn" />
           </a>
 
           <a href="https://www.behance.net/cazzanellianna" target="_blank" rel="noopener" class="footer-link"
-            aria-label="Profilo Behance di Anna Cazzanelli">
-            <img src="/icone/icon-behance.svg" alt="" class="social-icn" aria-hidden="true" />
+            aria-label="Profilo Behance di Anna Cazzanelli - Si apre in una nuova scheda">
+            <img src="/icone/icon-behance.svg" alt="Behance" class="social-icn" />
           </a>
         </div>
       </div>

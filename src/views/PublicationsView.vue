@@ -36,7 +36,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="page-content">
+  <main id="main-content" tabindex="-1"  class="page-content">
     <div class="publications-page-wrapper flex flex-col items-center py-4">
 
       <section class="hero-container relative w-full overflow-hidden" role="region" aria-labelledby="page-title">

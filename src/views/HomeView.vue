@@ -225,7 +225,7 @@ watch(illustrations, async () => {
 </script>
 
 <template>
-  <main class="page-content bg-surface text-text pt-2 pb-16">
+  <main id="main-content" tabindex="-1" class="page-content bg-surface text-text pt-2 pb-16">
     <section class="hero mx-auto max-w-[1280px] px-desktop pt-8 pb-14 grid items-center gap-14" role="region"
       aria-labelledby="home-title">
 

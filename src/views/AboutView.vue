@@ -12,7 +12,7 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 </script>
 
 <template>
-  <main class="bg-surface text-text py-12 px-mobile md:px-desktop" aria-labelledby="about-title">
+  <main id="main-content" tabindex="-1" class="bg-surface text-text py-12 px-mobile md:px-desktop" aria-labelledby="about-title">
     <div id="about-intro"
       class="mx-auto max-w-[1200px] grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-[72px] items-start">
 

@@ -269,7 +269,7 @@ watch(() => route.params.id, fetchProjectData)
 </script>
 
 <template>
-  <main class="page bg-surface text-text">
+  <main id="main-content" tabindex="-1" class="page bg-surface text-text">
 
     <div v-if="loading" class="loading py-40 text-center opacity-80" role="status" aria-live="polite">
       Caricamento progetto…

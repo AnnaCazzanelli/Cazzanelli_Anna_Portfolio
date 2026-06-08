@@ -118,7 +118,7 @@ watch(() => route.params.id, fetchIllustration)
 </script>
 
 <template>
-  <main class="page bg-surface text-text">
+  <main id="main-content" tabindex="-1" class="page bg-surface text-text">
 
     <div v-if="loading" class="loading text-center opacity-80 py-40" role="status" aria-live="polite">
       Caricamento illustrazione…

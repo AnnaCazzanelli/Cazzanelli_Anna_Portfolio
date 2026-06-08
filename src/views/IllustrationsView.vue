@@ -116,7 +116,7 @@ onMounted(getIllustrations)
 </script>
 
 <template>
-  <main class="page-content">
+  <main id="main-content" tabindex="-1"  class="page-content">
     <div class="illustrations-container flex flex-col items-center py-4">
 
       <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region"

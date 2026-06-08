@@ -104,7 +104,7 @@ async function getProjects() {
 </script>
 
 <template>
-  <main class="page-content" aria-labelledby="page-title">
+  <main id="main-content" tabindex="-1" class="page-content" aria-labelledby="page-title">
     <div class="projects-container flex flex-col items-center py-4">
 
       <section class="hero-container relative w-full overflow-hidden" role="region" aria-labelledby="page-title">

@@ -179,7 +179,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <main class="page-content">
+  <main id="main-content" tabindex="-1"  class="page-content">
     <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region"
       aria-labelledby="page-title">
       <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
