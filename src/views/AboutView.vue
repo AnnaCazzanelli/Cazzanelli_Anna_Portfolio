@@ -83,8 +83,8 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
    ========================================================================== */
 .portrait-wrapper {
   width: 100%;
-  border: 1px solid var(--color-surface);
-  background-color: var(--color-surface);
+ 
+
 }
 
 .portrait-img {
