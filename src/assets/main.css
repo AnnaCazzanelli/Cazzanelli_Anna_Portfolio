@@ -6,19 +6,22 @@
   --color-surface-light: #FDFDFE;
   --color-text-light: #1A1A1C;
   --color-accent-light:#8A5CFF;
-  --color-hover-light: #6E47D9;
+  --color-hover-light: #3614A0;
+  --color-link-light: #6E47D9;
 
   /* Colori scuri */
   --color-surface-dark: #111113;
   --color-text-dark: #F2F2F5;
   --color-accent-dark: #8C6CFF;
-  --color-hover-dark: #7357D9;
+--color-hover-dark: #C9BFFF;
+  --color-link-dark: #A48BFF;
 
   /* Variabili di default */
   --color-surface: var(--color-surface-light);
   --color-text: var(--color-text-light);
   --color-accent: var(--color-accent-light);
-  --color-hover: var(--color-hover-dark);
+  --color-hover: var(--color-hover-light);
+  --color-link: var(--color-link-light);
 
   /* Margini layout */
   --margin-desktop: 20px;
@@ -35,6 +38,7 @@ body.dark-mode {
   --color-text: var(--color-text-dark);
   --color-accent: var(--color-accent-dark);
   --color-hover: var(--color-hover-dark);
+  --color-link: var(--color-link-dark);
 }
 
 /* Variabili RGB per sfondi/transizioni */
@@ -42,14 +46,16 @@ body.dark-mode {
   --surface-rgb: 253 253 254;
   --text-rgb: 26 26 28;
   --accent-rgb: 122 92 255;
-  --hover-rgb: 115 87 217;
+  --hover-rgb: 194 176 255;
+  --link-rgb: 166 139 255;
 }
 
 body.dark-mode {
   --surface-rgb: 17 17 19;
   --text-rgb: 242 242 245;
   --accent-rgb: 140 108 255;
-  --hover-rgb: 115 87 217;
+  --hover-rgb: 194 176 255;
+  --link-rgb: 166 139 255;
 }
 
 /* Stili base */
