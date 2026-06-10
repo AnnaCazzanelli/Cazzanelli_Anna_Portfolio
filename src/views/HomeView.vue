@@ -242,7 +242,6 @@ watch(illustrations, async () => {
           Se vuoi saperne di più di me
         </p>
 
-        <!-- RIPRISTINATO: Testo originale "Clicca qui" con aria-label accessibile e nessun title -->
         <RouterLink to="/about" class="cta hero-btn whitespace-nowrap"
           aria-label="Clicca qui per saperne di più su Anna Cazzanelli">
           Clicca qui
@@ -529,6 +528,7 @@ watch(illustrations, async () => {
   }
 }
 
+/* CORRETTO: Riquadro di hover sulle freccette circolare, morbido ed elegante */
 .nav {
   width: 48px;
   height: 48px;
@@ -537,18 +537,21 @@ watch(illustrations, async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+ 
+  /* Trasforma il riquadro in un cerchio perfetto */
   cursor: pointer;
   transition:
-    background-color 0.2s,
-    transform 0.1s;
+    background-color 0.25s ease,
+    transform 0.1s ease;
 }
 
 .nav:hover {
-  background-color: rgba(0, 0, 0, 0.06);
+  /* Genera un velo leggero e coordinato alla tua tinta accent */
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
 .nav:active {
-  transform: scale(0.96);
+  transform: scale(0.92);
 }
 
 .nav .icon {
@@ -559,7 +562,7 @@ watch(illustrations, async () => {
 }
 
 .nav:disabled {
-  opacity: 0.35;
+  opacity: 0.25;
   cursor: not-allowed;
 }
 
@@ -586,10 +589,10 @@ watch(illustrations, async () => {
   flex-direction: column;
 }
 
+/* CORRETTO: Rimosso lo sfondo e il padding forzato per eliminare il contorno sgradevole */
 .card-frame {
-  background: var(--color-surface);
   margin: 0;
-  padding: 10px;
+  padding: 0;
   display: grid;
   place-items: center;
 }
@@ -599,7 +602,6 @@ watch(illustrations, async () => {
   width: 100%;
   height: 220px;
   object-fit: contain;
-  background-color: var(--color-surface);
 }
 
 .card-title {
@@ -616,15 +618,16 @@ watch(illustrations, async () => {
 }
 
 /* Card illustrazione */
+/* CORRETTO: Eliminato lo sfondo e il padding isolante per ripulire l'anteprima */
 .card-illustration {
   flex: 0 0 auto;
-  background: var(--color-surface);
+  background: transparent;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
   display: grid;
   place-items: center;
-  padding: 8px;
+  padding: 0;
 }
 
 .card-illustration img {
@@ -633,7 +636,6 @@ watch(illustrations, async () => {
   max-width: 520px;
   object-fit: contain;
   display: block;
-  background-color: var(--color-surface);
 }
 
 @media (max-width: 980px) {
@@ -649,6 +651,7 @@ watch(illustrations, async () => {
 }
 
 /* CTA “Scopri di più” */
+/* CORRETTO: Agganciato saldamente e in modo coerente alle tue tonalità di --color-link */
 .cta-see-all {
   display: inline-flex;
   align-items: center;
@@ -657,15 +660,18 @@ watch(illustrations, async () => {
   font-size: 15px;
   font-family: var(--font-body);
   text-decoration: none;
-  color: var(--color-accent);
-  opacity: 0.9;
+  color: var(--color-link);
+  /* Usa il viola link nativo del main.css */
+  opacity: 1;
+  /* Piena visibilità */
   transition:
-    opacity 0.2s ease,
-    color 0.2s ease;
+    color 0.25s ease,
+    transform 0.2s ease;
   margin-top: 80px;
   white-space: nowrap;
 }
 
+/* Cambia nel tuo viola scuro (o lilla in dark) definito per l'hover */
 .cta-see-all:hover {
   color: var(--color-hover);
 }
