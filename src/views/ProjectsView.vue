@@ -28,7 +28,7 @@ const CATEGORY_COLORS = {
   'Web Design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
   'Communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
   'Case Studies': { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
-  'Visual Design': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
+  'Visual Design': { bg: '#ffe3f4', bd: '#ffa8dc', fg: '#7a1f5d' },
   Other: { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
