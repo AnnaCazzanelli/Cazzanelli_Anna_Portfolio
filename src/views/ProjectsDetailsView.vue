@@ -262,7 +262,7 @@ watch(() => route.params.id, fetchProjectData)
               allowfullscreen class="w-full h-full block"></iframe>
           </div>
 
-          <div v-else class="image-wrapper w-full flex justify-center cursor-zoom-in" @click="openLightbox(media.hi)">
+          <div class="image-wrapper w-full flex justify-center cursor-zoom-in" @click="openLightbox(media.hi)">
             <picture class="block w-full">
               <source media="(max-width: 768px)" :srcset="media.lo" />
               <img :src="media.hi" :alt="`${project.title} - Dettaglio ${index + 1}`"
@@ -280,21 +280,19 @@ watch(() => route.params.id, fetchProjectData)
 
         <div class="mobile-behance-summary md:hidden flex flex-col gap-4">
           <dl class="meta-list flex flex-col gap-6">
-            <div v-if="project.year">
+            <template v-if="project.year">
               <dt class="meta-label">Anno:</dt>
               <dd>
                 <p class="desc">{{ project.year }}</p>
               </dd>
-            </div>
+            </template>
 
-            <div>
-              <dt class="meta-label">Categoria:</dt>
-              <dd>
-                <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
-              </dd>
-            </div>
+            <dt class="meta-label">Categoria:</dt>
+            <dd>
+              <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+            </dd>
 
-            <div v-if="project.link_url || project.drive_url || normalizedLinks.length">
+            <template v-if="project.link_url || project.drive_url || normalizedLinks.length">
               <dt class="meta-label">Link esterni:</dt>
               <dd>
                 <div class="flex flex-wrap gap-2 mt-1">
@@ -312,14 +310,13 @@ watch(() => route.params.id, fetchProjectData)
                   </template>
                 </div>
               </dd>
-            </div>
+            </template>
           </dl>
 
           <div class="col mt-4">
             <h2 class="meta-label section-heading-style">Descrizione</h2>
             <div v-if="project.description" class="project-description leading-relaxed mt-2"
-              v-html="project.description">
-            </div>
+              v-html="project.description"></div>
           </div>
 
           <button @click="openMobileInfo"
@@ -343,53 +340,45 @@ watch(() => route.params.id, fetchProjectData)
             </div>
 
             <dl class="meta-list flex flex-col gap-7 mt-6">
-              <div v-if="project.year">
-                <dt class="meta-label">Anno:</dt>
-                <dd>
-                  <p class="desc">{{ project.year }}</p>
-                </dd>
-              </div>
+              <dt v-if="project.year" class="meta-label">Anno:</dt>
+              <dd v-if="project.year">
+                <p class="desc">{{ project.year }}</p>
+              </dd>
 
-              <div v-if="project.link_url || project.drive_url || normalizedLinks.length">
-                <dt class="meta-label">Link esterni:</dt>
-                <dd class="flex flex-col gap-2 mt-1">
-                  <template v-if="normalizedLinks.length > 0">
-                    <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
-                      rel="noopener noreferrer" class="underline-link w-fit">
-                      {{ lnk.label }}
-                    </a>
-                  </template>
-                  <template v-else>
-                    <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
-                      class="underline-link w-fit">
-                      {{ project.link_label || 'Visualizza materiale' }}
-                    </a>
-                  </template>
-                </dd>
-              </div>
+              <dt v-if="project.link_url || project.drive_url || normalizedLinks.length" class="meta-label">Link
+                esterni:</dt>
+              <dd v-if="project.link_url || project.drive_url || normalizedLinks.length"
+                class="flex flex-col gap-2 mt-1">
+                <template v-if="normalizedLinks.length > 0">
+                  <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
+                    rel="noopener noreferrer" class="underline-link w-fit">
+                    {{ lnk.label }}
+                  </a>
+                </template>
+                <template v-else>
+                  <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                    class="underline-link w-fit">
+                    {{ project.link_label || 'Visualizza materiale' }}
+                  </a>
+                </template>
+              </dd>
 
-              <div>
-                <dt class="meta-label">Categoria:</dt>
-                <dd class="mt-1">
-                  <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
-                </dd>
-              </div>
+              <dt class="meta-label">Categoria:</dt>
+              <dd class="mt-1">
+                <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
+              </dd>
 
-              <div v-if="project.tag?.length">
-                <dt class="meta-label">Tag:</dt>
-                <dd>
-                  <ul class="tags mt-1">
-                    <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
-                  </ul>
-                </dd>
-              </div>
+              <dt v-if="project.tag?.length" class="meta-label">Tag:</dt>
+              <dd v-if="project.tag?.length">
+                <ul class="tags mt-1">
+                  <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
+                </ul>
+              </dd>
 
-              <div v-if="project.tools">
-                <dt class="meta-label">Tools:</dt>
-                <dd>
-                  <p class="desc">{{ project.tools }}</p>
-                </dd>
-              </div>
+              <dt v-if="project.tools" class="meta-label">Tools:</dt>
+              <dd v-if="project.tools">
+                <p class="desc">{{ project.tools }}</p>
+              </dd>
             </dl>
           </div>
         </div>
@@ -412,28 +401,26 @@ watch(() => route.params.id, fetchProjectData)
           </div>
 
           <dl class="meta-list flex flex-col gap-6 m-0">
-            <div>
-              <dt class="meta-label">Categoria:</dt>
-              <dd class="mt-1">
-                <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
-              </dd>
-            </div>
+            <dt class="meta-label">Categoria:</dt>
+            <dd class="mt-1">
+              <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+            </dd>
 
-            <div v-if="project.tag?.length">
-              <dt class="meta-label">Tag</dt>
+            <template v-if="project.tag?.length">
+              <dt class="meta-label">Tag:</dt>
               <dd>
                 <ul class="tags mt-1">
                   <li v-for="(t, i) in project.tag" :key="'mobtag-' + i" class="pill" :style="tagStyle">{{ t }}</li>
                 </ul>
               </dd>
-            </div>
+            </template>
 
-            <div v-if="project.tools">
-              <dt class="meta-label">Tools</dt>
+            <template v-if="project.tools">
+              <dt class="meta-label">Tools:</dt>
               <dd>
                 <p class="desc">{{ project.tools }}</p>
               </dd>
-            </div>
+            </template>
           </dl>
         </div>
       </div>
@@ -525,10 +512,6 @@ watch(() => route.params.id, fetchProjectData)
   margin-bottom: 0;
 }
 
-.image-wrapper {
-  user-select: none;
-}
-
 .behance-img {
   width: 100%;
   height: auto;
@@ -558,7 +541,6 @@ watch(() => route.params.id, fetchProjectData)
   list-style: none;
 }
 
-/* Aggiornato il selettore per applicare lo stile nativo a dt anziché a h3 */
 .meta-label,
 dt.meta-label {
   font-size: clamp(1.25rem, 1.9vw, 1.35rem) !important;
