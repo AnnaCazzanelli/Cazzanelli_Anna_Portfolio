@@ -61,6 +61,11 @@ watch(showMobileInfo, async (newVal) => {
 const activeLightboxImage = ref(null)
 
 function openLightbox(url) {
+  if (!url) return
+  const checkUrl = String(url).toLowerCase()
+  if (checkUrl.includes('youtu') || checkUrl.includes('vimeo') || checkUrl.includes('mp4')) {
+    return
+  }
   activeLightboxImage.value = url
   document.documentElement.style.overflow = 'hidden'
 }
@@ -92,18 +97,41 @@ const mediaItems = computed(() => {
         const hi = (it.high_res || '').trim()
         const lo = (it.low_res || '').trim()
         const caption = (it.caption || '').trim()
-        const isVideo = hi.includes('youtube.com') || hi.includes('youtu.be')
-        return {
-          type: isVideo ? 'video' : 'image',
-          hi,
-          lo: lo || hi,
-          caption
+
+        const checkHi = hi.toLowerCase()
+        const checkLo = lo.toLowerCase()
+        const isVideo = checkHi.includes('youtu') || checkHi.includes('vimeo') || checkHi.includes('mp4') ||
+          checkLo.includes('youtu') || checkLo.includes('vimeo') || checkLo.includes('mp4')
+
+        if (isVideo) {
+          let videoUrl = (checkHi.includes('youtu') || checkHi.includes('vimeo') || checkHi.includes('mp4')) ? hi : lo
+          if (videoUrl.includes('watch?v=')) {
+            videoUrl = videoUrl.replace('watch?v=', 'embed/')
+            const ampersandPos = videoUrl.indexOf('&')
+            if (ampersandPos !== -1) {
+              videoUrl = videoUrl.substring(0, ampersandPos)
+            }
+          }
+          return { type: 'video', hi: videoUrl, lo: '', caption }
         }
+
+        return { type: 'image', hi, lo: lo || hi, caption }
       }
+
       if (typeof it === 'string') {
         const s = it.trim()
-        const isVideo = s.includes('youtube.com') || s.includes('youtu.be')
-        return { type: isVideo ? 'video' : 'image', hi: s, lo: s, caption: '' }
+        const checkStr = s.toLowerCase()
+        const isVideo = checkStr.includes('youtu') || checkStr.includes('vimeo') || checkStr.includes('mp4')
+
+        let videoUrl = s
+        if (isVideo && videoUrl.includes('watch?v=')) {
+          videoUrl = videoUrl.replace('watch?v=', 'embed/')
+          const ampersandPos = videoUrl.indexOf('&')
+          if (ampersandPos !== -1) {
+            videoUrl = videoUrl.substring(0, ampersandPos)
+          }
+        }
+        return { type: isVideo ? 'video' : 'image', hi: videoUrl, lo: isVideo ? '' : videoUrl, caption: '' }
       }
       return null
     })
@@ -255,14 +283,15 @@ watch(() => route.params.id, fetchProjectData)
       <section class="behance-showcase w-full mb-14 flex flex-col items-center"
         aria-label="Galleria opere del progetto">
         <div v-for="(media, index) in mediaItems" :key="index" class="showcase-item w-full flex flex-col items-center">
+
           <div v-if="media.type === 'video'"
             class="video-wrapper w-full max-w-[1100px] aspect-video overflow-hidden shadow-md">
-            <iframe :src="media.hi" title="YouTube video player" frameborder="0"
+            <iframe :src="media.hi" title="Video player" frameborder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowfullscreen class="w-full h-full block"></iframe>
           </div>
 
-          <div class="image-wrapper w-full flex justify-center cursor-zoom-in" @click="openLightbox(media.hi)">
+          <div v-else class="image-wrapper w-full flex justify-center cursor-zoom-in" @click="openLightbox(media.hi)">
             <picture class="block w-full">
               <source media="(max-width: 768px)" :srcset="media.lo" />
               <img :src="media.hi" :alt="`${project.title} - Dettaglio ${index + 1}`"
@@ -278,49 +307,45 @@ watch(() => route.params.id, fetchProjectData)
 
       <section class="meta grid gap-12 lg:gap-20 mt-4 px-4 md:px-0" aria-label="Dettagli e specifiche del progetto">
 
-        <div class="mobile-behance-summary md:hidden flex flex-col gap-4">
-          <dl class="meta-list flex flex-col gap-6">
-            <template v-if="project.year">
-              <dt class="meta-label">Anno:</dt>
-              <dd>
-                <p class="desc">{{ project.year }}</p>
-              </dd>
-            </template>
+        <div class="mobile-behance-summary md:hidden flex flex-col gap-6 w-full">
 
-            <dt class="meta-label">Categoria:</dt>
-            <dd>
-              <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
-            </dd>
+          <div v-if="project.year" class="mobile-meta-block">
+            <div class="meta-label">Anno:</div>
+            <p class="desc m-0">{{ project.year }}</p>
+          </div>
 
-            <template v-if="project.link_url || project.drive_url || normalizedLinks.length">
-              <dt class="meta-label">Link esterni:</dt>
-              <dd>
-                <div class="flex flex-wrap gap-2 mt-1">
-                  <template v-if="normalizedLinks.length > 0">
-                    <a v-for="lnk in normalizedLinks" :key="'mob-' + lnk.url" :href="lnk.url" target="_blank"
-                      rel="noopener noreferrer" class="underline-link font-medium">
-                      {{ lnk.label }}
-                    </a>
-                  </template>
-                  <template v-else>
-                    <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
-                      class="underline-link font-medium">
-                      {{ project.link_label || 'Visualizza materiale' }}
-                    </a>
-                  </template>
-                </div>
-              </dd>
-            </template>
-          </dl>
+          <div class="mobile-meta-block">
+            <div class="meta-label">Categoria:</div>
+            <p class="m-0"><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+          </div>
 
-          <div class="col mt-4">
+          <div v-if="project.link_url || project.drive_url || normalizedLinks.length" class="mobile-meta-block">
+            <div class="meta-label">Link esterni:</div>
+            <div class="flex flex-wrap gap-3 mt-1">
+              <template v-if="normalizedLinks.length > 0">
+                <a v-for="lnk in normalizedLinks" :key="'mob-' + lnk.url" :href="lnk.url" target="_blank"
+                  rel="noopener noreferrer" class="underline-link font-medium">
+                  {{ lnk.label }}
+                </a>
+              </template>
+              <template v-else>
+                <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                  class="underline-link font-medium">
+                  {{ project.link_label || 'Visualizza materiale' }}
+                </a>
+              </template>
+            </div>
+          </div>
+
+          <div class="mobile-meta-block mt-2">
             <h2 class="meta-label section-heading-style">Descrizione</h2>
             <div v-if="project.description" class="project-description leading-relaxed mt-2"
-              v-html="project.description"></div>
+              v-html="project.description">
+            </div>
           </div>
 
           <button @click="openMobileInfo"
-            class="mobile-trigger-info-btn text-left mt-3 border-t border-black/10 dark:border-white/10 pt-4 focus:outline-none"
+            class="mobile-trigger-info-btn text-left mt-2 border-t border-black/10 dark:border-white/10 pt-4 focus:outline-none"
             aria-haspopup="dialog">
             Mostra maggiori dettagli
           </button>
@@ -340,45 +365,51 @@ watch(() => route.params.id, fetchProjectData)
             </div>
 
             <dl class="meta-list flex flex-col gap-7 mt-6">
-              <dt v-if="project.year" class="meta-label">Anno:</dt>
-              <dd v-if="project.year">
-                <p class="desc">{{ project.year }}</p>
-              </dd>
+              <template v-if="project.year">
+                <dt class="meta-label">Anno:</dt>
+                <dd>
+                  <p class="desc">{{ project.year }}</p>
+                </dd>
+              </template>
 
-              <dt v-if="project.link_url || project.drive_url || normalizedLinks.length" class="meta-label">Link
-                esterni:</dt>
-              <dd v-if="project.link_url || project.drive_url || normalizedLinks.length"
-                class="flex flex-col gap-2 mt-1">
-                <template v-if="normalizedLinks.length > 0">
-                  <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
-                    rel="noopener noreferrer" class="underline-link w-fit">
-                    {{ lnk.label }}
-                  </a>
-                </template>
-                <template v-else>
-                  <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
-                    class="underline-link w-fit">
-                    {{ project.link_label || 'Visualizza materiale' }}
-                  </a>
-                </template>
-              </dd>
+              <template v-if="project.link_url || project.drive_url || normalizedLinks.length">
+                <dt class="meta-label">Link esterni:</dt>
+                <dd class="flex flex-col gap-2 mt-1">
+                  <template v-if="normalizedLinks.length > 0">
+                    <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
+                      rel="noopener noreferrer" class="underline-link w-fit">
+                      {{ lnk.label }}
+                    </a>
+                  </template>
+                  <template v-else>
+                    <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                      class="underline-link w-fit">
+                      {{ project.link_label || 'Visualizza materiale' }}
+                    </a>
+                  </template>
+                </dd>
+              </template>
 
               <dt class="meta-label">Categoria:</dt>
               <dd class="mt-1">
                 <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
               </dd>
 
-              <dt v-if="project.tag?.length" class="meta-label">Tag:</dt>
-              <dd v-if="project.tag?.length">
-                <ul class="tags mt-1">
-                  <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
-                </ul>
-              </dd>
+              <template v-if="project.tag?.length">
+                <dt class="meta-label">Tag:</dt>
+                <dd>
+                  <ul class="tags mt-1">
+                    <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
+                  </ul>
+                </dd>
+              </template>
 
-              <dt v-if="project.tools" class="meta-label">Tools:</dt>
-              <dd v-if="project.tools">
-                <p class="desc">{{ project.tools }}</p>
-              </dd>
+              <template v-if="project.tools">
+                <dt class="meta-label">Tools:</dt>
+                <dd>
+                  <p class="desc">{{ project.tools }}</p>
+                </dd>
+              </template>
             </dl>
           </div>
         </div>
@@ -508,8 +539,8 @@ watch(() => route.params.id, fetchProjectData)
   margin-bottom: 1rem;
 }
 
-.showcase-item:last-child {
-  margin-bottom: 0;
+.image-wrapper {
+  user-select: none;
 }
 
 .behance-img {
@@ -535,20 +566,17 @@ watch(() => route.params.id, fetchProjectData)
   align-items: start;
 }
 
-.meta-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
 .meta-label,
 dt.meta-label {
   font-size: clamp(1.25rem, 1.9vw, 1.35rem) !important;
   margin: 0 0 12px;
   font-family: var(--font-heading);
-  font-style: normal;
   font-weight: 700;
   color: var(--color-accent);
+}
+
+.mobile-meta-block .meta-label {
+  margin: 0 0 6px;
 }
 
 h2.meta-label.section-heading-style {
@@ -566,7 +594,6 @@ h2.meta-label.section-heading-style {
 .placeholder-caption-style {
   text-align: left;
   margin-top: 1.25rem !important;
-  margin-bottom: 0rem !important;
   width: 100%;
 }
 
@@ -596,18 +623,15 @@ h2.meta-label.section-heading-style {
   border: 1px solid currentColor;
   font-size: 0.9rem;
   font-weight: var(--font-weight-medium);
-  line-height: normal;
 }
 
 .info-meta-col {
   background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
   border: 1px solid var(--color-accent);
-  border-radius: 0px !important;
   padding: 0;
 }
 
 .panel-header-wrapper {
-  padding-top: 0;
   padding-left: 2rem;
   padding-right: 2rem;
 }
@@ -625,27 +649,14 @@ h2.meta-label.section-heading-style {
 
 .mobile-info-card {
   background-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface, #fdfdfe));
-  border-radius: 0px !important;
 }
 
 :global(body.dark-mode) .mobile-info-card {
   background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface, #111113));
 }
 
-.mobile-info-close-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.mobile-info-close-btn:hover {
-  opacity: 0.7;
-}
-
 .mobile-trigger-info-btn {
   font-size: 15px;
-  font-family: var(--font-body);
   font-weight: 600;
   color: var(--color-link);
   background: transparent;
@@ -653,18 +664,6 @@ h2.meta-label.section-heading-style {
   padding: 0;
   cursor: pointer;
   text-decoration: underline;
-  transition: color 0.2s ease;
-}
-
-.mobile-trigger-info-btn:hover {
-  color: var(--color-hover);
-}
-
-.inline-version {
-  font-size: clamp(1rem, 1.3vw, 1.25rem) !important;
-  font-weight: 700 !important;
-  margin: 0 !important;
-  white-space: nowrap;
 }
 
 .back-btn img,
@@ -682,12 +681,6 @@ h2.meta-label.section-heading-style {
 
 .svg-accent-icon {
   fill: var(--color-accent);
-  transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.lightbox-close-btn:hover .svg-accent-icon {
-  transform: scale(1.1);
-  opacity: 0.85;
 }
 
 .lightbox-overlay {
@@ -732,18 +725,6 @@ h2.meta-label.section-heading-style {
 
   h2.meta-label.section-heading-style {
     font-size: 1.75rem !important;
-    line-height: 1.3;
-    margin-bottom: 14px;
-  }
-
-  .panel-header-wrapper {
-    padding: 24px 24px 0 24px;
-  }
-
-  .meta-list {
-    padding-left: 0;
-    padding-right: 24px;
-    padding-bottom: 24px;
   }
 
   .underline-link {
