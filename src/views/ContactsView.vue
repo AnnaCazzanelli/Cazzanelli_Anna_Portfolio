@@ -413,7 +413,7 @@ textarea:focus {
   border: 1px solid var(--color-accent);;
   border-radius: 0;
   background-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
-    transition: transform 0.08s ease,
+  transition: transform 0.08s ease,
       background-color 0.2s ease,
       color 0.2s ease;
       
@@ -422,6 +422,7 @@ textarea:focus {
 .primary-btn:hover {
   background-color: var(--color-hover);
   color: var(--color-surface);
+  
 }
 
 .primary-btn:disabled {
