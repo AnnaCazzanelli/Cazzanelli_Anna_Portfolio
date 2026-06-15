@@ -13,8 +13,8 @@
   --color-surface-dark: #111113;
   --color-text-dark: #F2F2F5;
   --color-accent-dark: #8C6CFF;
---color-hover-dark: #C9BFFF;
-  --color-link-dark: #A48BFF;
+--color-hover-dark: #E8E1FF;
+  --color-link-dark: #C3B3FF;
 
   /* Variabili di default */
   --color-surface: var(--color-surface-light);
