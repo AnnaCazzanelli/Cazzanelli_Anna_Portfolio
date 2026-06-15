@@ -1,27 +1,77 @@
 <script setup>
-/* ==========================================================================
-   Import e routing
-   ========================================================================= */
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter, RouterLink } from 'vue-router'
-
-/* ==========================================================================
-   Firestore
-   ========================================================================= */
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRoute, RouterLink } from 'vue-router'
 import { db } from '@/firebase/config'
 import { doc, getDoc, collection, query, orderBy, getDocs } from 'firebase/firestore'
 
-/* ==========================================================================
-   Stato view
-   ========================================================================= */
 const route = useRoute()
-const router = useRouter()
 const project = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
-const activeIndex = ref(0)
 
-// Navigazione tra progetti (ID ordinati)
+const showMobileInfo = ref(false)
+let lastActiveElement = null
+
+function openMobileInfo() {
+  lastActiveElement = document.activeElement
+  showMobileInfo.value = true
+  document.documentElement.style.overflow = 'hidden'
+}
+
+function closeMobileInfo() {
+  showMobileInfo.value = false
+  document.documentElement.style.overflow = ''
+  if (lastActiveElement && typeof lastActiveElement.focus === 'function') {
+    lastActiveElement.focus()
+  }
+}
+
+function trapMobileInfoFocus(e) {
+  if (!showMobileInfo.value) return
+  if (e.key === 'Tab') {
+    const modal = document.querySelector('.mobile-info-card')
+    if (!modal) return
+    const focusable = modal.querySelectorAll('button, a, [tabindex="0"]')
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        last.focus()
+        e.preventDefault()
+      }
+    } else {
+      if (document.activeElement === last) {
+        first.focus()
+        e.preventDefault()
+      }
+    }
+  }
+}
+
+watch(showMobileInfo, async (newVal) => {
+  if (newVal) {
+    await nextTick()
+    const closeBtn = document.querySelector('.mobile-info-close-btn')
+    if (closeBtn) closeBtn.focus()
+  }
+})
+
+const activeLightboxImage = ref(null)
+
+function openLightbox(url) {
+  activeLightboxImage.value = url
+  document.documentElement.style.overflow = 'hidden'
+}
+
+function closeLightbox() {
+  activeLightboxImage.value = null
+  if (!showMobileInfo.value) {
+    document.documentElement.style.overflow = ''
+  }
+}
+
 const orderedIds = ref([])
 const currentIndexInList = computed(() => {
   return orderedIds.value.indexOf(String(route.params.id || '').trim())
@@ -33,25 +83,7 @@ const nextProjectId = computed(() => {
   return null
 })
 
-/* ==========================================================================
-   Helpers
-   ========================================================================= */
-const isImgUrl = (u) =>
-  typeof u === 'string' && /\.(webp|png|jpe?g|gif|avif)$/i.test((u || '').trim())
-
-const normKey = (u) => {
-  if (typeof u !== 'string') return ''
-  const clean = u.trim().toLowerCase().split('?')[0]
-  const file = clean.split('/').pop() || ''
-  return file.replace(/\.(webp|png|jpe?g|gif|avif)$/i, '')
-}
-
-window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-
-/* ==========================================================================
-   Normalizzazione gallery e Immagini
-   ========================================================================= */
-const galleryPairs = computed(() => {
+const mediaItems = computed(() => {
   const g = project.value?.gallery
   if (!Array.isArray(g)) return []
   return g
@@ -59,165 +91,44 @@ const galleryPairs = computed(() => {
       if (it && typeof it === 'object') {
         const hi = (it.high_res || '').trim()
         const lo = (it.low_res || '').trim()
+        const caption = (it.caption || '').trim()
         const isVideo = hi.includes('youtube.com') || hi.includes('youtu.be')
         return {
           type: isVideo ? 'video' : 'image',
           hi,
-          lo: lo || hi
+          lo: lo || hi,
+          caption
         }
       }
       if (typeof it === 'string') {
         const s = it.trim()
         const isVideo = s.includes('youtube.com') || s.includes('youtu.be')
-        return { type: isVideo ? 'video' : 'image', hi: s, lo: s }
+        return { type: isVideo ? 'video' : 'image', hi: s, lo: s, caption: '' }
       }
-      return { type: 'image', hi: '', lo: '' }
+      return null
     })
-    .filter((p) => p.hi || p.lo)
+    .filter((item) => item && (item.hi || item.lo))
 })
 
-const images = computed(() => {
-  if (!project.value) return []
-  const out = []
-  const added = new Set()
-  const coverRaw = (project.value.main_image?.trim?.() || project.value.img || '').trim()
-
-  if (isImgUrl(coverRaw)) {
-    const coverKey = normKey(coverRaw)
-    const hiResMatch = galleryPairs.value.find(p => p.type === 'image' && normKey(p.hi) === coverKey)
-    out.push({
-      type: 'image',
-      src: hiResMatch ? hiResMatch.hi : coverRaw,
-      alt: `${project.value.title} – cover`
-    })
-    added.add(coverKey)
-  }
-
-  for (const p of galleryPairs.value) {
-    if (p.type === 'video') {
-      out.push({ type: 'video', src: p.hi, alt: `${project.value.title} – video` })
-    } else {
-      const src = p.hi?.trim()
-      if (!isImgUrl(src)) continue
-      const key = normKey(src)
-      if (!added.has(key)) {
-        out.push({ type: 'image', src, alt: `${project.value.title} – immagine` })
-        added.add(key)
-      }
+const normalizedLinks = computed(() => {
+  if (!project.value?.links || !Array.isArray(project.value.links)) return []
+  return project.value.links.map(lnk => {
+    if (!lnk) return null
+    const labelKey = Object.keys(lnk).find(k => k.trim() === 'label')
+    const urlKey = Object.keys(lnk).find(k => k.trim() === 'url')
+    return {
+      label: labelKey ? lnk[labelKey] : 'Vedi materiale',
+      url: urlKey ? lnk[urlKey] : '#'
     }
-  }
-  return out
+  }).filter(l => l !== null)
 })
 
-const thumbs = computed(() => {
-  if (!project.value) return []
-  const out = []
-  const added = new Set()
-  const loByKey = new Map()
-
-  for (const p of galleryPairs.value) {
-    if (p.type === 'image') {
-      const lo = isImgUrl(p.lo) ? p.lo : (isImgUrl(p.hi) ? p.hi : '')
-      if (lo) loByKey.set(normKey(p.hi || lo), lo)
-    }
-  }
-
-  const cover = (project.value.main_image?.trim?.() || project.value.img || '').trim()
-  if (isImgUrl(cover)) {
-    const coverKey = normKey(cover)
-    const coverThumb = loByKey.get(coverKey) || cover
-    out.push({ src: coverThumb, alt: `${project.value.title} – cover` })
-    added.add(normKey(coverThumb))
-    added.add(coverKey)
-  }
-
-  for (const p of galleryPairs.value) {
-    if (p.type === 'video') {
-      out.push({ src: p.lo, alt: `${project.value.title} – miniatura video` })
-    } else {
-      const candidate = isImgUrl(p.lo) ? p.lo : (isImgUrl(p.hi) ? p.hi : '')
-      if (candidate && !added.has(normKey(candidate))) {
-        out.push({ src: candidate, alt: `${project.value.title} – miniatura` })
-        added.add(normKey(candidate))
-      }
-    }
-  }
-  return out
-})
-
-/* ==========================================================================
-   Navigazione Carosello
-   ========================================================================= */
-const setActive = (i) => { activeIndex.value = i }
-const prev = () => { if (activeIndex.value > 0) activeIndex.value-- }
-const next = () => { if (activeIndex.value < images.value.length - 1) activeIndex.value++ }
-
-// Spostamento assistito miniature bloccato su mobile per prevenire la trottola
-watch(activeIndex, () => {
-  if (window.innerWidth <= 768) return
-
-  const container = document.querySelector('.thumbs')
-  const activeThumb = document.querySelector('.thumb.active')
-  if (container && activeThumb) {
-    const containerLeft = container.scrollLeft
-    const containerRight = containerLeft + container.offsetWidth
-    const thumbLeft = activeThumb.offsetLeft
-    const thumbRight = thumbLeft + activeThumb.offsetWidth
-
-    if (thumbLeft < containerLeft || thumbRight > containerRight) {
-      const scrollLeft = thumbLeft - container.offsetWidth / 2 + activeThumb.offsetWidth / 2
-      container.scrollTo({ left: scrollLeft, behavior: 'smooth' })
-    }
-  }
-})
-
-/* ==========================================================================
-   Logica Click & Drag con il Mouse per Desktop
-   ========================================================================= */
-let isDown = false
-let startXScroll
-let scrollLeftStart
-
-const onMousedown = (e) => {
-  const container = document.querySelector('.thumbs')
-  if (!container) return
-  isDown = true
-  container.classList.add('dragging')
-  startXScroll = e.pageX - container.offsetLeft
-  scrollLeftStart = container.scrollLeft
-}
-
-const onMouseleave = () => {
-  const container = document.querySelector('.thumbs')
-  isDown = false
-  if (container) container.classList.remove('dragging')
-}
-
-const onMouseup = () => {
-  const container = document.querySelector('.thumbs')
-  isDown = false
-  if (container) container.classList.remove('dragging')
-}
-
-const onMousemove = (e) => {
-  if (!isDown) return
-  e.preventDefault()
-  const container = document.querySelector('.thumbs')
-  if (!container) return
-  const x = e.pageX - container.offsetLeft
-  const walk = (x - startXScroll) * 1.5
-  container.scrollLeft = scrollLeftStart - walk
-}
-
-/* ==========================================================================
-   Gestione dei Colori Dinamici
-   ========================================================================= */
 const CATEGORY_COLORS = {
   'motion graphics': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
   'web design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
   'communication': { bg: '#ffe3e3', bd: '#ffa8a8', fg: '#7a1f1f' },
   'case studies': { bg: '#e6f4ea', bd: '#81c995', fg: '#137333' },
-  'visual design': { bg: '#f3f0ff', bd: '#d0bfff', fg: '#5f3dc4' },
+  'visual design': { bg: '#ffe3f4', bd: '#ffa8dc', fg: '#7a1f5d' },
   'other': { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
@@ -231,14 +142,11 @@ const tagStyle = computed(() => {
   }
 })
 
-/* ==========================================================================
-   Fetch dati
-   ========================================================================= */
 async function fetchProjectData() {
   loading.value = true
   notFound.value = false
   project.value = null
-  activeIndex.value = 0
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   const id = String(route.params.id || '').trim()
 
   try {
@@ -264,144 +172,287 @@ async function fetchProjectData() {
   }
 }
 
-onMounted(fetchProjectData)
+onMounted(() => {
+  fetchProjectData()
+  window.addEventListener('keydown', (ev) => {
+    if (showMobileInfo.value && ev.key === 'Escape') closeMobileInfo()
+    if (showMobileInfo.value) trapMobileInfoFocus(ev)
+    if (activeLightboxImage.value && ev.key === 'Escape') closeLightbox()
+  })
+})
 watch(() => route.params.id, fetchProjectData)
 </script>
 
 <template>
   <main id="main-content" tabindex="-1" class="page bg-surface text-text">
-
     <div v-if="loading" class="loading py-40 text-center opacity-80" role="status" aria-live="polite">
       Caricamento progetto…
     </div>
 
     <div v-else-if="notFound" class="notfound py-40 text-center opacity-80" role="alert">
-      <p>Progetto non trovato.</p>
+      <p class="desc text-center">Progetto non trovato.</p>
       <RouterLink to="/projects" class="back-link text-accent">Torna ai progetti</RouterLink>
     </div>
 
-    <div v-else-if="project" class="container max-w-[1200px] mx-auto relative">
+    <div v-else-if="project" class="project-behance-container mx-auto relative">
 
-      <div class="top-nav-bar flex justify-between items-center w-full absolute -top-[60px] left-0 px-1">
+      <div class="top-nav-bar flex justify-between items-center w-full px-4 md:px-0 mb-8">
         <RouterLink to="/projects" class="back-btn w-12 h-12 inline-flex items-center justify-center bg-transparent"
           aria-label="Torna alla lista progetti" title="Torna alla lista progetti">
-          <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block" />
+          <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="w-6 h-6 block" />
           <span class="sr-only">Torna alla lista progetti</span>
         </RouterLink>
 
         <RouterLink v-if="nextProjectId" :to="{ name: 'project-details', params: { id: nextProjectId } }"
-          class="next-project-btn w-12 h-12 inline-flex items-center justify-center bg-transparent"
+          class="next-project-btn class-link w-12 h-12 inline-flex items-center justify-center bg-transparent"
           aria-label="Vai al progetto successivo" title="Vai al progetto successivo">
-          <img src="/icone/icon-arrowdx.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block" />
+          <img src="/icone/icon-arrowdx.svg" alt="" aria-hidden="true" class="w-6 h-6 block" />
           <span class="sr-only">Progetto successivo</span>
         </RouterLink>
-        <div v-else class="w-12 h-12 opacity-0 pointer-events-none"></div>
       </div>
 
-      <h1 class="title text-accent text-center">{{ project.title }}</h1>
+      <header class="project-header text-center">
+        <h1 class="title text-accent text-center">{{ project.title }}</h1>
 
-      <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-4 md:gap-6 mb-14"
-        aria-label="Visualizzatore elementi del progetto">
+        <div
+          class="project-top-meta-desktop hidden md:flex flex-wrap justify-center items-baseline gap-x-8 gap-y-2 mb-14">
+          <div v-if="project.year" class="meta-inline-item-top">
+            <h3 class="meta-label inline-version">Anno:</h3>
+            <span class="desc-text">{{ project.year }}</span>
+          </div>
 
-        <button
-          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
-          type="button" :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente"
-          title="Elemento precedente">
-          <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
-        </button>
+          <div class="meta-inline-item-top">
+            <h3 class="meta-label inline-version">Categoria:</h3>
+            <span>
+              <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
+            </span>
+          </div>
 
-        <div class="stage bg-surface grid place-items-center overflow-hidden w-full">
-          <iframe v-if="images[activeIndex]?.type === 'video'" :src="images[activeIndex].src"
-            title="YouTube video player" frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen class="block w-full max-w-[1080px] aspect-video rounded-lg mx-auto"></iframe>
-
-          <img v-else :src="images[activeIndex]?.src" :alt="images[activeIndex]?.alt"
-            class="stage-img block h-[clamp(18rem,60vh,45rem)] w-auto max-w-full object-contain mx-auto"
-            loading="eager" />
-        </div>
-
-        <button
-          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
-          type="button" :disabled="activeIndex === images.length - 1" @click="next" aria-label="Immagine successiva"
-          title="Immagine successiva">
-          <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
-        </button>
-
-      </section>
-
-      <section v-if="thumbs.length > 1" class="thumbs-container mb-14 overflow-hidden">
-        <div class="thumbs flex gap-4 no-scrollbar px-4 md:px-20" role="list" aria-label="Miniature della galleria"
-          @mousedown="onMousedown" @mouseleave="onMouseleave" @mouseup="onMouseup" @mousemove="onMousemove">
-          <button v-for="(t, i) in thumbs" :key="t.src + i"
-            class="thumb flex-shrink-0 w-[112px] h-[112px] rounded-lg overflow-hidden border-2 transition"
-            :class="{ 'active': i === activeIndex }" @click="setActive(i)" :aria-label="'Mostra immagine ' + (i + 1)"
-            :title="'Mostra immagine ' + (i + 1)" :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
-            <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover pointer-events-none" />
-          </button>
-        </div>
-      </section>
-
-      <section class="meta grid grid-cols-[1fr_2fr] gap-[72px] pt-10 border-t border-black/5 dark:border-white/5"
-        aria-label="Scheda informativa del progetto">
-        <div class="col">
-          <dl class="meta-list">
-            <dt v-if="project.year" class="meta-label">Data</dt>
-            <dd v-if="project.year">
-              <p>{{ project.year }}</p>
-            </dd>
-
-            <dt v-if="project.drive_url" class="meta-label">Link di progetto</dt>
-            <dd v-if="project.drive_url">
-              <p>
-                <a :href="project.drive_url" target="_blank" rel="noopener noreferrer"
-                  class="external-link sidebar-link" aria-label="Visualizza i materiali aggiuntivi su Drive">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  <span>Materiali aggiuntivi</span>
+          <div v-if="project.link_url || project.drive_url || normalizedLinks.length" class="meta-inline-item-top">
+            <h3 class="meta-label inline-version">Link esterni:</h3>
+            <div class="inline-links-flex">
+              <template v-if="normalizedLinks.length > 0">
+                <a v-for="lnk in normalizedLinks" :key="lnk.url" :href="lnk.url" target="_blank"
+                  rel="noopener noreferrer" class="underline-link">
+                  {{ lnk.label }}
                 </a>
-              </p>
-            </dd>
-
-            <dt class="meta-label">Tipo di progetto</dt>
-            <dd>
-              <p><span class="pill inline-block" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
-            </dd>
-
-            <dt v-if="project.tag?.length" class="meta-label">Tag</dt>
-            <dd v-if="project.tag?.length">
-              <ul class="tags flex flex-wrap gap-3 list-none p-0" aria-label="Tag del progetto">
-                <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
-              </ul>
-            </dd>
-
-            <dt class="meta-label">Tecnica (Tools)</dt>
-            <dd>
-              <p v-if="project.tools">{{ project.tools }}</p>
-              <p v-else class="opacity-50">Dati non disponibili</p>
-            </dd>
-          </dl>
-        </div>
-
-        <div class="col">
-          <h2 class="meta-label">Descrizione</h2>
-          <div v-if="project.description" class="desc leading-relaxed">
-            <p v-html="project.description"></p>
-            <div v-if="project.drive_url" class="external-links-wrapper mt-8">
-              <a :href="project.drive_url" target="_blank" rel="noopener noreferrer" class="external-link"
-                aria-label="Visualizza i materiali aggiuntivi su Drive">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>Visualizza materiali aggiuntivi</span>
-              </a>
+              </template>
+              <template v-else>
+                <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                  class="underline-link">
+                  {{ project.link_label || 'Visualizza materiale' }}
+                </a>
+                <a v-else-if="project.drive_url" :href="project.drive_url" target="_blank" rel="noopener noreferrer"
+                  class="underline-link">
+                  Materiali aggiuntivi
+                </a>
+              </template>
             </div>
           </div>
         </div>
+      </header>
+
+      <section class="behance-showcase w-full mb-14 flex flex-col items-center"
+        aria-label="Galleria opere del progetto">
+        <div v-for="(media, index) in mediaItems" :key="index" class="showcase-item w-full flex flex-col items-center">
+          <div v-if="media.type === 'video'"
+            class="video-wrapper w-full max-w-[1100px] aspect-video overflow-hidden shadow-md">
+            <iframe :src="media.hi" title="YouTube video player" frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen class="w-full h-full block"></iframe>
+          </div>
+
+          <div v-else class="image-wrapper w-full flex justify-center cursor-zoom-in" @click="openLightbox(media.hi)">
+            <picture class="block w-full">
+              <source media="(max-width: 768px)" :srcset="media.lo" />
+              <img :src="media.hi" :alt="`${project.title} - Dettaglio ${index + 1}`"
+                class="behance-img block mx-auto w-full h-auto" loading="lazy" />
+            </picture>
+          </div>
+
+          <p class="desc px-4 italic placeholder-caption-style" v-if="media.caption">
+            {{ media.caption }}
+          </p>
+        </div>
       </section>
+
+      <section class="meta grid gap-12 lg:gap-20 mt-4 px-4 md:px-0" aria-label="Dettagli e specifiche del progetto">
+
+        <!-- Layout Mobile -->
+        <div class="mobile-behance-summary md:hidden flex flex-col gap-4">
+          <div class="meta-list flex flex-col gap-6">
+            <div v-if="project.year">
+              <h3 class="meta-label">Anno:</h3>
+              <p class="desc">{{ project.year }}</p>
+            </div>
+
+            <div>
+              <h3 class="meta-label">Categoria:</h3>
+              <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+            </div>
+
+            <div v-if="project.link_url || project.drive_url || normalizedLinks.length">
+              <h3 class="meta-label">Link esterni:</h3>
+              <div class="flex flex-wrap gap-2 mt-1">
+                <template v-if="normalizedLinks.length > 0">
+                  <a v-for="lnk in normalizedLinks" :key="'mob-' + lnk.url" :href="lnk.url" target="_blank"
+                    rel="noopener noreferrer" class="underline-link font-medium">
+                    {{ lnk.label }}
+                  </a>
+                </template>
+                <template v-else>
+                  <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                    class="underline-link font-medium">
+                    {{ project.link_label || 'Visualizza materiale' }}
+                  </a>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <div class="col mt-4">
+            <h2 class="meta-label section-heading-style">Descrizione</h2>
+            <div v-if="project.description" class="project-description leading-relaxed mt-2"
+              v-html="project.description">
+            </div>
+          </div>
+
+          <button @click="openMobileInfo"
+            class="mobile-trigger-info-btn text-left mt-3 border-t border-black/10 dark:border-white/10 pt-4 focus:outline-none"
+            aria-haspopup="dialog">
+            Mostra maggiori dettagli
+          </button>
+        </div>
+
+        <!-- Layout Desktop -->
+        <div class="hidden md:contents">
+          <div class="col">
+            <h2 class="meta-label section-heading-style">Descrizione</h2>
+            <div v-if="project.description" class="project-description leading-relaxed mt-4"
+              v-html="project.description">
+            </div>
+          </div>
+
+          <div class="info-meta-col h-fit">
+            <div class="panel-header-wrapper">
+              <h2 class="meta-label section-heading-style panel-border-bottom">Dettagli</h2>
+            </div>
+
+            <dl class="meta-list flex flex-col gap-7 mt-6">
+              <div v-if="project.year">
+                <h3 class="meta-label">Anno:</h3>
+                <dd>
+                  <p class="desc">{{ project.year }}</p>
+                </dd>
+              </div>
+
+              <div v-if="project.link_url || project.drive_url || normalizedLinks.length">
+                <h3 class="meta-label">Link esterni:</h3>
+                <dd class="flex flex-col gap-2 mt-1">
+                  <template v-if="normalizedLinks.length > 0">
+                    <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
+                      rel="noopener noreferrer" class="underline-link w-fit">
+                      {{ lnk.label }}
+                    </a>
+                  </template>
+                  <template v-else>
+                    <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                      class="underline-link w-fit">
+                      {{ project.link_label || 'Visualizza materiale' }}
+                    </a>
+                  </template>
+                </dd>
+              </div>
+
+              <div>
+                <h3 class="meta-label">Categoria:</h3>
+                <dd class="mt-1">
+                  <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
+                </dd>
+              </div>
+
+              <div v-if="project.tag?.length">
+                <h3 class="meta-label">Tag:</h3>
+                <dd>
+                  <ul class="tags mt-1">
+                    <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
+                  </ul>
+                </dd>
+              </div>
+
+              <div v-if="project.tools">
+                <h3 class="meta-label">Tools:</h3>
+                <dd>
+                  <p class="desc">{{ project.tools }}</p>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <!-- Drawer Modale Mobile -->
+      <div v-if="showMobileInfo" class="mobile-info-overlay fixed inset-0 z-[2000] flex items-end md:hidden"
+        role="dialog" aria-modal="true">
+        <div class="mobile-info-backdrop absolute inset-0 bg-black/60" @click="closeMobileInfo"></div>
+
+        <div
+          class="mobile-info-card relative w-full p-6 text-text border-t border-black/20 dark:border-white/20 shadow-2xl flex flex-col gap-6 max-h-[85vh] overflow-y-auto">
+          <div
+            class="mobile-modal-top-bar flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-3">
+            <h2 class="meta-label section-heading-style m-0">Dettagli</h2>
+            <button @click="closeMobileInfo"
+              class="mobile-info-close-btn flex items-center justify-center p-2 focus:outline-none"
+              aria-label="Chiudi informazioni">
+              <img src="/icone/icon-cross.svg" alt="" aria-hidden="true" class="w-4 h-4 block" />
+            </button>
+          </div>
+
+          <dl class="meta-list flex flex-col gap-6 m-0">
+            <div>
+              <h3 class="meta-label">Categoria:</h3>
+              <dd class="mt-1">
+                <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+              </dd>
+            </div>
+
+            <div v-if="project.tag?.length">
+              <h3 class="meta-label">Tag</h3>
+              <dd>
+                <ul class="tags mt-1">
+                  <li v-for="(t, i) in project.tag" :key="'mobtag-' + i" class="pill" :style="tagStyle">{{ t }}</li>
+                </ul>
+              </dd>
+            </div>
+
+            <div v-if="project.tools">
+              <h3 class="meta-label">Tools</h3>
+              <dd>
+                <p class="desc">{{ project.tools }}</p>
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      <!-- Lightbox Fullscreen Overlay -->
+      <div v-if="activeLightboxImage"
+        class="lightbox-overlay fixed inset-0 z-[3000] flex items-center justify-center bg-black/95 p-4 md:p-8"
+        @click="closeLightbox">
+        <button
+          class="lightbox-close-btn absolute top-6 right-6 bg-transparent border-0 w-12 h-12 flex items-center justify-center cursor-pointer transition-transform"
+          @click.stop="closeLightbox" aria-label="Chiudi visualizzazione a schermo intero">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6 svg-accent-icon"
+            aria-hidden="true">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+        <div class="lightbox-content-wrapper max-w-full max-h-full flex items-center justify-center" @click.stop>
+          <img :src="activeLightboxImage" alt="Dettaglio opera ingrandito"
+            class="lightbox-image max-w-full max-h-[90vh] object-contain select-none shadow-2xl" />
+        </div>
+      </div>
 
     </div>
   </main>
@@ -410,32 +461,231 @@ watch(() => route.params.id, fetchProjectData)
 <style scoped>
 .sr-only {
   position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  padding: 0 !important;
-  margin: -1px !important;
-  overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-.top-nav-bar {
+.page {
+  padding: 40px var(--margin-desktop) 120px;
+}
+
+.project-behance-container {
+  max-width: 1100px;
+}
+
+.title {
+  font-size: clamp(2rem, 4.2vw, 4.6rem);
+  line-height: 1.1;
+  margin: 56px 0 40px;
+}
+
+.meta-inline-item-top {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.inline-links-flex {
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.underline-link {
+  color: var(--color-link);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+.underline-link:hover {
+  color: var(--color-hover);
+  text-decoration: underline;
+}
+
+.behance-showcase {
+  display: flex;
+  flex-direction: column;
+}
+
+.showcase-item {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.showcase-item:last-child {
+  margin-bottom: 0;
+}
+
+.image-wrapper {
+  user-select: none;
+}
+
+.behance-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0px !important;
+}
+
+.video-wrapper {
+  width: 100%;
+  max-width: 1100px;
+  border-radius: 0px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.video-wrapper iframe {
+  border-radius: 0px !important;
+}
+
+.meta {
+  grid-template-columns: 1.8fr 1fr;
+  align-items: start;
+}
+
+.meta-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+h3.meta-label,
+dt.meta-label {
+  font-size: clamp(1.25rem, 1.9vw, 1.35rem) !important;
+  margin: 0 0 12px;
+  font-family: var(--font-heading);
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+h2.meta-label.section-heading-style {
+  font-size: clamp(1.4rem, 2.3vw, 1.85rem) !important;
+  margin: 0;
+}
+
+.desc,
+.meta-list dd p {
+  font-size: clamp(0.93rem, 1.05vw, 1.12rem);
+  line-height: 1.8;
+  margin: 0 0 14px;
+}
+
+/* CORRETTO: Impostata l'impaginazione a bandiera a sinistra per testi lunghi e leggibili */
+.placeholder-caption-style {
+  text-align: left;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0rem !important;
   width: 100%;
 }
 
-.back-btn,
-.next-project-btn {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
+.project-description :deep(p) {
+  font-size: clamp(0.93rem, 1.05vw, 1.12rem);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  white-space: pre-line;
+}
+
+.tags {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  list-style: none;
+  padding: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  line-height: normal;
+}
+
+.info-meta-col {
+  background-color: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border: 1px solid var(--color-accent);
+  border-radius: 0px !important;
+  padding: 0;
+}
+
+.panel-header-wrapper {
+  padding-top: 0;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.meta-list {
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+}
+
+.panel-border-bottom {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 15%, transparent);
+  padding-bottom: 0.75rem;
+}
+
+.mobile-info-card {
+  background-color: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface, #fdfdfe));
+  border-radius: 0px !important;
+}
+
+:global(body.dark-mode) .mobile-info-card {
+  background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface, #111113));
+}
+
+.mobile-info-close-btn {
+  background: transparent;
+  border: none;
   cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.mobile-info-close-btn:hover {
+  opacity: 0.7;
+}
+
+.mobile-trigger-info-btn {
+  font-size: 15px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--color-link);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.mobile-trigger-info-btn:hover {
+  color: var(--color-hover);
+}
+
+.inline-version {
+  font-size: clamp(1rem, 1.3vw, 1.25rem) !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  white-space: nowrap;
 }
 
 .back-btn img,
 .next-project-btn img {
-  transition: transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.22s ease;
 }
 
 .back-btn:hover img {
@@ -446,184 +696,85 @@ watch(() => route.params.id, fetchProjectData)
   transform: translateX(4px);
 }
 
-.external-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--color-accent);
-  text-decoration: underline;
-  transition: color 0.2s ease;
-  font-size: 0.875rem;
+.svg-accent-icon {
+  fill: var(--color-accent);
+  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.external-link:hover {
-  color: var(--color-hover);
+.lightbox-close-btn:hover .svg-accent-icon {
+  transform: scale(1.1);
+  opacity: 0.85;
 }
 
-.external-links-wrapper {
-  margin-top: 2rem;
+.lightbox-overlay {
+  animation: fadeIn 0.2s ease-out;
 }
 
-.page {
-  padding: 48px var(--margin-desktop) 112px;
+.lightbox-image {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.title {
-  font-size: clamp(2rem, 4.2vw, 3.5rem);
-  line-height: 1.1;
-  margin: 56px 0 48px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
-.nav {
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-.nav:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.05) !important;
-  transform: scale(1.05);
-}
-
-.nav:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
-:global(.dark) .nav:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1) !important;
-}
-
-.thumbs-container {
-  width: 100%;
-}
-
-.thumbs {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-  overflow-x: auto;
-}
-
-/* CORRETTO: Isolata la transizione solo su opacity e bloccata la dissolvenza del colore */
-.thumb {
-  border: 2px solid var(--color-text) !important;
-  opacity: 0.7;
-  transition: opacity 0.2s ease !important;
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  display: block;
-}
-
-/* CORRETTO: Quando è selezionata scatta all'istante diventando viola senza ritardi */
-.thumb.active {
-  border-color: var(--color-accent) !important;
-  opacity: 100 !important;
-  transition: none !important;
-}
-
-.thumb img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
-}
-
-.meta-list {
-  margin: 0;
-  padding: 0;
-}
-
-/* AGGIORNATO CON LE TUE SPECIFICHE: Uniformato per rispecchiare lo stile esatto dei titoli anche senza tag H2 */
-.meta-label {
-  font-size: clamp(1.25rem, 1.9vw, 1.5rem);
-  margin-bottom: 12px;
-  font-family: var(--font-heading);
-  font-style: normal;
-  font-weight: 700;
-  color: var(--color-accent);
-}
-
-.desc p,
-.meta-list dd p {
-  font-size: clamp(0.93rem, 1.05vw, 1.12rem);
-  line-height: 1.8;
-  margin-bottom: 14px;
-  white-space: pre-line;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 16px;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: var(--font-weight-semibold);
-  line-height: normal;
-  border: 1px solid currentColor;
-}
-
-/* ==========================================================================
-   VERSIONE MOBILE ADATTATA
-   ========================================================================= */
 @media (max-width: 768px) {
   .page {
-    padding: 48px var(--margin-mobile) 96px;
+    padding: 32px var(--margin-mobile) 96px;
   }
 
   .title {
-    margin: 56px 0 48px;
     font-size: 2.2rem;
+    margin: 40px 0 24px;
   }
 
-  .viewer {
-    grid-template-columns: 40px 1fr 40px;
-    gap: 8px;
-    margin-bottom: 24px;
+  h2.meta-label.section-heading-style {
+    font-size: 1.75rem !important;
+    line-height: 1.3;
+    margin-bottom: 14px;
   }
 
-  .nav {
-    width: 40px;
-    height: 40px;
-    position: static !important;
-    overflow: visible !important;
-    clip: auto !important;
-    white-space: normal !important;
+  .panel-header-wrapper {
+    padding: 24px 24px 0 24px;
   }
 
-  .nav img {
-    width: 20px;
-    height: 20px;
+  /* CORRETTO: padding-left impostato a 0 su mobile per azzerare il rientro e allinearsi alla descrizione */
+  .meta-list {
+    padding-left: 0;
+    padding-right: 24px;
+    padding-bottom: 24px;
   }
 
-  .stage-img {
-    height: 45vh !important;
+  .underline-link {
+    text-decoration: underline !important;
   }
 
-  .thumbs {
-    padding-inline: 4px;
+  .behance-img {
+    width: 100% !important;
+    height: auto !important;
   }
 
   .meta {
     grid-template-columns: 1fr;
-    gap: 32px;
-  }
-
-  .meta-list dt {
-    margin-top: 24px;
-  }
-
-  .meta-list dt:first-child {
-    margin-top: 0;
-  }
-
-  .meta-label {
-    margin-bottom: 6px;
-  }
-
-  .meta-list dd p {
-    margin-bottom: 0;
+    gap: 28px;
   }
 }
 </style>
