@@ -217,7 +217,7 @@ onMounted(getIllustrations)
   background: transparent;
   border: none;
   font-family: var(--font-body);
-  color: var(--color-accent);
+  color: var(--color-link);
   padding: 6px 14px;
   cursor: pointer;
   border-radius: 999px;
