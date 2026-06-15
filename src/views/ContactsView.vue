@@ -405,18 +405,23 @@ textarea:focus {
 .primary-btn {
   align-self: center;
   background-color: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-text);
   font-weight: 700;
-  font-size: 14px;
-  padding: 10px 18px;
-  border: 1px solid currentColor;
+  font-size: 18px;
+  line-height: 1;
+  padding: 16px 28px;
+  border: 1px solid var(--color-accent);;
   border-radius: 0;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+  background-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
+    transition: transform 0.08s ease,
+      background-color 0.2s ease,
+      color 0.2s ease;
+      
 }
 
 .primary-btn:hover {
   background-color: var(--color-hover);
+  color: var(--color-surface);
 }
 
 .primary-btn:disabled {
@@ -539,7 +544,7 @@ textarea:focus {
 
 .modal-btn.confirm {
   background: var(--color-accent);
-  color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .modal-btn.confirm:hover {
