@@ -39,7 +39,7 @@ import { RouterLink } from 'vue-router'
 
 /* Pulsante principale */
 .cta-btn {
-  font-weight: 500;
+  font-weight: 700;
   background-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
   color: var(--color-text);
 }
