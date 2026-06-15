@@ -52,7 +52,7 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
           In ogni progetto cerco di coniugare <strong>creatività</strong>, <strong>funzionalità</strong> e
           <strong>accessibilità</strong> dando vita
           a soluzioni visive efficaci e coerenti con il contesto.<br />
-          All'interno di questo site portfolio, potrai explorar una selezione dei lavori più significativi e
+          All'interno di questo sito portfolio, potrai explorar una selezione dei lavori più significativi e
           rappresentativi della mia produzione creativa e professionale.
         </p>
       </article>
