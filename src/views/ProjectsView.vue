@@ -206,7 +206,7 @@ async function getProjects() {
   background: transparent;
   border: none;
   font-family: var(--font-body);
-  color: var(--color-accent);
+  color: var(--color-link);
   font-size: 1rem;
   padding: 6px 14px;
   cursor: pointer;
