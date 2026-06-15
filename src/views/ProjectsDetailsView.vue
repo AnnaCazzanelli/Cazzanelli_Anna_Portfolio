@@ -217,19 +217,19 @@ watch(() => route.params.id, fetchProjectData)
         <div
           class="project-top-meta-desktop hidden md:flex flex-wrap justify-center items-baseline gap-x-8 gap-y-2 mb-14">
           <div v-if="project.year" class="meta-inline-item-top">
-            <h3 class="meta-label inline-version">Anno:</h3>
+            <span class="meta-label inline-version font-bold">Anno:</span>
             <span class="desc-text">{{ project.year }}</span>
           </div>
 
           <div class="meta-inline-item-top">
-            <h3 class="meta-label inline-version">Categoria:</h3>
+            <span class="meta-label inline-version font-bold">Categoria:</span>
             <span>
               <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
             </span>
           </div>
 
           <div v-if="project.link_url || project.drive_url || normalizedLinks.length" class="meta-inline-item-top">
-            <h3 class="meta-label inline-version">Link esterni:</h3>
+            <span class="meta-label inline-version font-bold">Link esterni:</span>
             <div class="inline-links-flex">
               <template v-if="normalizedLinks.length > 0">
                 <a v-for="lnk in normalizedLinks" :key="lnk.url" :href="lnk.url" target="_blank"
@@ -278,37 +278,42 @@ watch(() => route.params.id, fetchProjectData)
 
       <section class="meta grid gap-12 lg:gap-20 mt-4 px-4 md:px-0" aria-label="Dettagli e specifiche del progetto">
 
-        <!-- Layout Mobile -->
         <div class="mobile-behance-summary md:hidden flex flex-col gap-4">
-          <div class="meta-list flex flex-col gap-6">
+          <dl class="meta-list flex flex-col gap-6">
             <div v-if="project.year">
-              <h3 class="meta-label">Anno:</h3>
-              <p class="desc">{{ project.year }}</p>
+              <dt class="meta-label">Anno:</dt>
+              <dd>
+                <p class="desc">{{ project.year }}</p>
+              </dd>
             </div>
 
             <div>
-              <h3 class="meta-label">Categoria:</h3>
-              <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+              <dt class="meta-label">Categoria:</dt>
+              <dd>
+                <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
+              </dd>
             </div>
 
             <div v-if="project.link_url || project.drive_url || normalizedLinks.length">
-              <h3 class="meta-label">Link esterni:</h3>
-              <div class="flex flex-wrap gap-2 mt-1">
-                <template v-if="normalizedLinks.length > 0">
-                  <a v-for="lnk in normalizedLinks" :key="'mob-' + lnk.url" :href="lnk.url" target="_blank"
-                    rel="noopener noreferrer" class="underline-link font-medium">
-                    {{ lnk.label }}
-                  </a>
-                </template>
-                <template v-else>
-                  <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
-                    class="underline-link font-medium">
-                    {{ project.link_label || 'Visualizza materiale' }}
-                  </a>
-                </template>
-              </div>
+              <dt class="meta-label">Link esterni:</dt>
+              <dd>
+                <div class="flex flex-wrap gap-2 mt-1">
+                  <template v-if="normalizedLinks.length > 0">
+                    <a v-for="lnk in normalizedLinks" :key="'mob-' + lnk.url" :href="lnk.url" target="_blank"
+                      rel="noopener noreferrer" class="underline-link font-medium">
+                      {{ lnk.label }}
+                    </a>
+                  </template>
+                  <template v-else>
+                    <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
+                      class="underline-link font-medium">
+                      {{ project.link_label || 'Visualizza materiale' }}
+                    </a>
+                  </template>
+                </div>
+              </dd>
             </div>
-          </div>
+          </dl>
 
           <div class="col mt-4">
             <h2 class="meta-label section-heading-style">Descrizione</h2>
@@ -324,7 +329,6 @@ watch(() => route.params.id, fetchProjectData)
           </button>
         </div>
 
-        <!-- Layout Desktop -->
         <div class="hidden md:contents">
           <div class="col">
             <h2 class="meta-label section-heading-style">Descrizione</h2>
@@ -340,14 +344,14 @@ watch(() => route.params.id, fetchProjectData)
 
             <dl class="meta-list flex flex-col gap-7 mt-6">
               <div v-if="project.year">
-                <h3 class="meta-label">Anno:</h3>
+                <dt class="meta-label">Anno:</dt>
                 <dd>
                   <p class="desc">{{ project.year }}</p>
                 </dd>
               </div>
 
               <div v-if="project.link_url || project.drive_url || normalizedLinks.length">
-                <h3 class="meta-label">Link esterni:</h3>
+                <dt class="meta-label">Link esterni:</dt>
                 <dd class="flex flex-col gap-2 mt-1">
                   <template v-if="normalizedLinks.length > 0">
                     <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
@@ -365,14 +369,14 @@ watch(() => route.params.id, fetchProjectData)
               </div>
 
               <div>
-                <h3 class="meta-label">Categoria:</h3>
+                <dt class="meta-label">Categoria:</dt>
                 <dd class="mt-1">
                   <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
                 </dd>
               </div>
 
               <div v-if="project.tag?.length">
-                <h3 class="meta-label">Tag:</h3>
+                <dt class="meta-label">Tag:</dt>
                 <dd>
                   <ul class="tags mt-1">
                     <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
@@ -381,7 +385,7 @@ watch(() => route.params.id, fetchProjectData)
               </div>
 
               <div v-if="project.tools">
-                <h3 class="meta-label">Tools:</h3>
+                <dt class="meta-label">Tools:</dt>
                 <dd>
                   <p class="desc">{{ project.tools }}</p>
                 </dd>
@@ -391,7 +395,6 @@ watch(() => route.params.id, fetchProjectData)
         </div>
       </section>
 
-      <!-- Drawer Modale Mobile -->
       <div v-if="showMobileInfo" class="mobile-info-overlay fixed inset-0 z-[2000] flex items-end md:hidden"
         role="dialog" aria-modal="true">
         <div class="mobile-info-backdrop absolute inset-0 bg-black/60" @click="closeMobileInfo"></div>
@@ -410,14 +413,14 @@ watch(() => route.params.id, fetchProjectData)
 
           <dl class="meta-list flex flex-col gap-6 m-0">
             <div>
-              <h3 class="meta-label">Categoria:</h3>
+              <dt class="meta-label">Categoria:</dt>
               <dd class="mt-1">
                 <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
               </dd>
             </div>
 
             <div v-if="project.tag?.length">
-              <h3 class="meta-label">Tag</h3>
+              <dt class="meta-label">Tag</dt>
               <dd>
                 <ul class="tags mt-1">
                   <li v-for="(t, i) in project.tag" :key="'mobtag-' + i" class="pill" :style="tagStyle">{{ t }}</li>
@@ -426,7 +429,7 @@ watch(() => route.params.id, fetchProjectData)
             </div>
 
             <div v-if="project.tools">
-              <h3 class="meta-label">Tools</h3>
+              <dt class="meta-label">Tools</dt>
               <dd>
                 <p class="desc">{{ project.tools }}</p>
               </dd>
@@ -435,7 +438,6 @@ watch(() => route.params.id, fetchProjectData)
         </div>
       </div>
 
-      <!-- Lightbox Fullscreen Overlay -->
       <div v-if="activeLightboxImage"
         class="lightbox-overlay fixed inset-0 z-[3000] flex items-center justify-center bg-black/95 p-4 md:p-8"
         @click="closeLightbox">
@@ -556,7 +558,8 @@ watch(() => route.params.id, fetchProjectData)
   list-style: none;
 }
 
-h3.meta-label,
+/* Aggiornato il selettore per applicare lo stile nativo a dt anziché a h3 */
+.meta-label,
 dt.meta-label {
   font-size: clamp(1.25rem, 1.9vw, 1.35rem) !important;
   margin: 0 0 12px;
@@ -578,7 +581,6 @@ h2.meta-label.section-heading-style {
   margin: 0 0 14px;
 }
 
-/* CORRETTO: Impostata l'impaginazione a bandiera a sinistra per testi lunghi e leggibili */
 .placeholder-caption-style {
   text-align: left;
   margin-top: 1.25rem !important;
@@ -756,7 +758,6 @@ h2.meta-label.section-heading-style {
     padding: 24px 24px 0 24px;
   }
 
-  /* CORRETTO: padding-left impostato a 0 su mobile per azzerare il rientro e allinearsi alla descrizione */
   .meta-list {
     padding-left: 0;
     padding-right: 24px;
