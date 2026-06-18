@@ -112,12 +112,12 @@ import { RouterLink } from 'vue-router'
 
 /* Stile per distanziare e sfumare leggermente i link legali rispetto al copyright principale */
 .legal-links {
-  opacity: 0.7;
+  opacity:1;
   transition: opacity 0.2s ease;
 }
 
 .legal-links:hover {
-  opacity: 1;
+  opacity: 0.7;
 }
 
 @media (min-width: 768px) {
