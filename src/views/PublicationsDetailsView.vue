@@ -211,12 +211,13 @@ watch(() => route.params.id, fetchPublication)
   padding: 48px var(--margin-desktop) 112px;
 }
 
+/* Titolo sincronizzato allo stile ciccio di Project Details */
 .title {
-  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  font-size: clamp(2rem, 4.2vw, 4.6rem);
   line-height: 1.1;
-  margin: 56px 0 48px;
-  font-family: var(--font-display);
-  font-weight: bold;
+  margin: 56px 0 40px;
+  font-family: var(--font-heading);
+  font-weight: 900;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -288,8 +289,8 @@ watch(() => route.params.id, fetchPublication)
 .desc,
 .meta-list dd p {
   font-size: clamp(0.93rem, 1.05vw, 1.12rem);
-    line-height: 1.8;
-    margin: 0 0 14px;
+  line-height: 1.8;
+  margin: 0 0 14px;
 }
 
 .meta-list {
@@ -311,6 +312,11 @@ watch(() => route.params.id, fetchPublication)
 @media (max-width: 768px) {
   .page {
     padding: 32px var(--margin-mobile) 80px;
+  }
+
+  .title {
+    font-size: 2.2rem;
+    margin: 40px 0 24px;
   }
 
   .viewer {
