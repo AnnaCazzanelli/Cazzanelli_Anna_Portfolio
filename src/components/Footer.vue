@@ -107,7 +107,8 @@ import { RouterLink } from 'vue-router'
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  opacity: 0.75;
+  opacity: 0.6;
+  
 }
 
 /* Stile per distanziare e sfumare leggermente i link legali rispetto al copyright principale */
