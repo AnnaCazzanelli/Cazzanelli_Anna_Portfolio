@@ -47,8 +47,10 @@ watch(
 </script>
 
 <template>
-  <div class="header-container w-full">
+  <header class="header-container w-full">
     <div class="header-content">
+
+      <!-- Navigazione Desktop -->
       <nav class="desktop-nav" aria-label="Navigazione principale">
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
@@ -58,35 +60,44 @@ watch(
         <RouterLink to="/contacts">Contatti</RouterLink>
       </nav>
 
-      <button class="theme-toggle" type="button" @click="toggleDarkMode" aria-label="Cambia tema">
-        <img v-if="isDarkMode" src="/icone/icon-moon.svg" class="mode-icn" alt="Dark Mode" />
-        <img v-else src="/icone/icon-sun.svg" class="mode-icn" alt="Light Mode" />
-      </button>
+      <!-- Area Controlli (Desktop & Base Mobile) -->
+      <div class="controls-wrapper">
+        <!-- Toggle Tema con SVG Mascherato Dinamico -->
+        <button class="theme-toggle" type="button" @click="toggleDarkMode" aria-label="Cambia tema">
+          <span v-if="isDarkMode" class="mode-icn icon-moon" aria-label="Dark Mode"></span>
+          <span v-else class="mode-icn icon-sun" aria-label="Light Mode"></span>
+        </button>
 
-      <button class="menu-icon" type="button" @click="toggleMobileMenu" aria-label="Apri menu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+        <!-- Icona Hamburger Mobile -->
+        <button class="menu-icon" type="button" @click="toggleMobileMenu" aria-label="Apri menu">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
 
+      <!-- Navigazione Mobile Overlay -->
       <nav class="mobile-nav" :class="{ 'is-open': isMobileMenuOpen }" aria-label="Navigazione mobile">
         <button class="close-menu-icon" type="button" @click="closeMobileMenu" aria-label="Chiudi menu">
           <img src="/icone/icon-cross.svg" alt="" aria-hidden="true" />
         </button>
 
-        <RouterLink to="/" @click="closeMobileMenu">Home</RouterLink>
-        <RouterLink to="/about" @click="closeMobileMenu">About</RouterLink>
-        <RouterLink to="/publications" @click="closeMobileMenu">Pubblicazioni</RouterLink>
-        <RouterLink to="/projects" @click="closeMobileMenu">Progetti</RouterLink>
-        <RouterLink to="/illustrations" @click="closeMobileMenu">Illustrazioni</RouterLink>
-        <RouterLink to="/contacts" @click="closeMobileMenu">Contatti</RouterLink>
+        <div class="mobile-links flex flex-col items-center">
+          <RouterLink to="/" @click="closeMobileMenu">Home</RouterLink>
+          <RouterLink to="/about" @click="closeMobileMenu">About</RouterLink>
+          <RouterLink to="/publications" @click="closeMobileMenu">Pubblicazioni</RouterLink>
+          <RouterLink to="/projects" @click="closeMobileMenu">Progetti</RouterLink>
+          <RouterLink to="/illustrations" @click="closeMobileMenu">Illustrazioni</RouterLink>
+          <RouterLink to="/contacts" @click="closeMobileMenu">Contatti</RouterLink>
+        </div>
       </nav>
+
     </div>
-  </div>
+  </header>
 </template>
 
 <style scoped>
-/* Header globale adattato */
+/* Header container */
 .header-container {
   border-bottom: 2px solid var(--color-accent);
 }
@@ -96,9 +107,16 @@ watch(
   justify-content: flex-end;
   align-items: center;
   padding: 20px var(--margin-desktop);
+  gap: 24px;
 }
 
-/* Nav desktop */
+/* Nav Desktop */
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .desktop-nav a {
   font-size: 16pt;
   line-height: 19pt;
@@ -106,46 +124,71 @@ watch(
   font-weight: 700;
   text-decoration: none;
   color: var(--color-text);
-  margin-left: 20px;
+  transition: color 0.2s ease;
 }
 
 .desktop-nav a:hover {
   color: var(--color-hover);
 }
 
-/* Toggle tema */
+/* Area utility */
+.controls-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* --- TOGGLE TEMA (SVG dinamici mascherati) --- */
 .theme-toggle {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: 10px;
 }
 
-.theme-toggle img {
-  width: 28px;
-  height: 28px;
+.mode-icn {
+  width: 24px;
+  height: 24px;
+  display: block;
+  background-color: var(--color-accent);
+  /* Prende automaticamente il colore d'accento */
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
 
-.mode-icn:hover {
-  opacity: 1;
+.icon-moon {
+  -webkit-mask-image: url('/icone/icon-moon.svg');
+  mask-image: url('/icone/icon-moon.svg');
+}
+
+.icon-sun {
+  -webkit-mask-image: url('/icone/icon-sun.svg');
+  mask-image: url('/icone/icon-sun.svg');
+}
+
+.theme-toggle:hover .mode-icn {
+  background-color: var(--color-hover);
+  /* Cambia colore al passaggio del mouse */
   transform: translateY(-1px);
-  color: var(--color-hover);
 }
 
-/* Icona hamburger - CORRETTA da div a button senza perdere lo stile */
+/* Icona Hamburger Mobile */
 .menu-icon {
   display: none;
   flex-direction: column;
   background: none;
   border: none;
   cursor: pointer;
-  margin-left: 10px;
   padding: 0;
 }
 
@@ -154,10 +197,10 @@ watch(
   width: 25px;
   height: 3px;
   background-color: var(--color-text);
-  margin: 5px 0;
+  margin: 3px 0;
 }
 
-/* Posizionamento e dimensioni della X - CORRETTA da div a button */
+/* Pulsante Chiusura Menu Mobile */
 .close-menu-icon {
   position: absolute;
   top: 20px;
@@ -178,15 +221,15 @@ watch(
   height: 28px;
 }
 
-/* Nav mobile */
+/* Navigazione Mobile Overlay */
 .mobile-nav {
   display: none;
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
+/* Mobile Responsive */
+@media (max-width: 900px) {
   .desktop-nav {
-    display: none;
+    display: none !important;
   }
 
   .menu-icon {
@@ -204,6 +247,7 @@ watch(
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 40px;
     transition: right 0.3s ease-in-out;
     z-index: 999;
   }
@@ -213,17 +257,13 @@ watch(
     right: 0;
   }
 
-  .mobile-nav a {
+  .mobile-links a {
     font-size: 1.81rem;
     line-height: 2.31rem;
     font-weight: 700;
     text-decoration: none;
     color: var(--color-text);
-    margin: 15px 0;
-  }
-
-  .mobile-nav a:hover {
-    color: var(--color-hover);
+    margin: 12px 0;
   }
 }
 </style>
