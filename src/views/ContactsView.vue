@@ -6,16 +6,71 @@ import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { db } from '@/firebase/config'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import emailjs from '@emailjs/browser'
+import { useLanguage } from '@/composables/useLanguage'
+
+/* Gestione Lingua Reattiva */
+const { currentLang } = useLanguage()
+
+const UI_TEXT = {
+  it: {
+    heroTitle: 'Contatti',
+    sectionTitle: 'Per lavori su commissione, collaborazioni o altro',
+    leadText: 'Compila il form qui sotto, ti contatterò al più presto.',
+    successMsg: '✅ Messaggio inviato, grazie! ti contatterò al più presto.',
+    errorRequired: 'Compila tutti i campi obbligatori.',
+    errorGeneric: 'Invio non riuscito. Riprova.',
+    errorConfig: "Configurazione EmailJS incompleta nel file delle variabili d'ambiente (.env.local).",
+    hpLabel: 'Lascia questo campo vuoto',
+    lblEmail: 'Email*',
+    lblName: 'Nome*',
+    lblMessage: 'Scrivi qui la tua richiesta*',
+    phEmail: 'La tua email',
+    phName: 'Il tuo nome',
+    phMessage: 'Scrivi qui la tua richiesta…',
+    btnSend: 'Invia',
+    btnSending: 'Invio…',
+    modalTitle: "Confermi l'invio?",
+    modalDesc: 'Controlla i dati e premi “Sì, invia”.',
+    modalName: 'Nome',
+    modalMessage: 'Messaggio',
+    modalConfirm: 'Sì, invia',
+    modalCancel: 'Annulla'
+  },
+  en: {
+    heroTitle: 'Contact',
+    sectionTitle: 'For commissions, collaborations, or inquiries',
+    leadText: 'Fill out the form below and I will get back to you as soon as possible.',
+    successMsg: '✅ Message sent successfully! Thank you, I will be in touch soon.',
+    errorRequired: 'Please fill in all required fields.',
+    errorGeneric: 'Failed to send message. Please try again.',
+    errorConfig: 'EmailJS configuration missing in environment variables (.env.local).',
+    hpLabel: 'Leave this field empty',
+    lblEmail: 'Email*',
+    lblName: 'Name*',
+    lblMessage: 'Your Message*',
+    phEmail: 'your.email@example.com',
+    phName: 'Your name',
+    phMessage: 'Tell me about your project, timeline, or idea…',
+    btnSend: 'Send Message',
+    btnSending: 'Sending…',
+    modalTitle: 'Confirm Submission',
+    modalDesc: 'Please review your details before sending:',
+    modalName: 'Name',
+    modalMessage: 'Message',
+    modalConfirm: 'Yes, Send',
+    modalCancel: 'Cancel'
+  }
+}
+
+const t = computed(() => {
+  const lang = String(currentLang?.value || currentLang || 'it').toLowerCase()
+  return lang.startsWith('en') ? UI_TEXT.en : UI_TEXT.it
+})
 
 /* Stato form */
 const email = ref('')
 const name = ref('')
 const message = ref('')
-
-/* Scroll iniziale */
-window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-
-/* Honeypot anti-bot (deve restare vuoto) */
 const honeypot = ref('')
 
 /* Stato UI */
@@ -41,17 +96,15 @@ function closeConfirm() {
   }
 }
 
-/* GESTIONE FOCUS ACCESSIBILE PER LA MODALE (FOCUS TRAP) */
+/* Gestione focus accessibile per la modale (Focus Trap) */
 watch(showConfirm, async (newVal) => {
   if (newVal) {
     await nextTick()
-    // Sposta il focus sul pulsante di conferma dentro la modale per l'utente con tastiera
     const confirmBtn = document.querySelector('.modal-btn.confirm')
     if (confirmBtn) confirmBtn.focus()
   }
 })
 
-// Impedisce al tasto Tab di uscire dalla modale finché è aperta
 function trapFocus(e) {
   if (!showConfirm.value) return
   if (e.key === 'Tab') {
@@ -75,7 +128,6 @@ function trapFocus(e) {
   }
 }
 
-/* User-Agent per diagnostica su Firestore */
 function getUserAgent() {
   if (typeof navigator !== 'undefined' && navigator.userAgent) {
     return navigator.userAgent.slice(0, 512)
@@ -83,14 +135,13 @@ function getUserAgent() {
   return 'unknown'
 }
 
-/* Pre-submit: apre la conferma, non invia ancora */
 function preSubmit(e) {
   e.preventDefault()
   errorMsg.value = ''
   success.value = false
 
   if (!email.value || !name.value || !message.value) {
-    errorMsg.value = 'Compila tutti i campi obbligatori.'
+    errorMsg.value = t.value.errorRequired
     return
   }
 
@@ -106,7 +157,6 @@ function preSubmit(e) {
   openConfirm()
 }
 
-/* Conferma: invio su Firestore + Notifica Email */
 async function confirmSend() {
   loading.value = true
   errorMsg.value = ''
@@ -117,6 +167,7 @@ async function confirmSend() {
       name: name.value.trim(),
       email: email.value.trim(),
       message: message.value.trim(),
+      lang: currentLang.value,
       userAgent: getUserAgent(),
       honeypot: '',
       createdAt: serverTimestamp()
@@ -128,7 +179,7 @@ async function confirmSend() {
     const privateKey = import.meta.env.VITE_EMAILJS_PRIVATE_KEY
 
     if (!serviceId || !templateId || !publicKey || !privateKey) {
-      throw new Error("Configurazione EmailJS incompleta nel file delle variabili d'ambiente (.env.local).")
+      throw new Error(t.value.errorConfig)
     }
 
     const templateParams = {
@@ -150,20 +201,18 @@ async function confirmSend() {
     honeypot.value = ''
     closeConfirm()
 
-    // Sposta il focus sul messaggio di successo globale
     await nextTick()
     const successBanner = document.getElementById('success-desc')
     if (successBanner) successBanner.focus()
   } catch (err) {
-    console.error("Errore durante l'invio:", err)
-    errorMsg.value = err?.message || 'Invio non riuscito. Riprova.'
+    console.error('Error sending message:', err)
+    errorMsg.value = err?.message || t.value.errorGeneric
     closeConfirm()
   } finally {
     loading.value = false
   }
 }
 
-/* Gestione tastiera globale */
 function onKeydown(ev) {
   if (showConfirm.value) {
     if (ev.key === 'Escape') {
@@ -174,34 +223,43 @@ function onKeydown(ev) {
   }
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
+onMounted(() => {
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <template>
-  <main id="main-content" tabindex="-1"  class="page-content">
+  <main id="main-content" tabindex="-1" class="page-content">
+
+    <!-- Hero Banner -->
     <section class="hero-container relative w-full h-[400px] overflow-hidden" role="region"
       aria-labelledby="page-title">
       <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
 
       <div
         class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
-        <h1 id="page-title">Contatti</h1>
+        <h1 id="page-title">{{ t.heroTitle }}</h1>
       </div>
     </section>
 
+    <!-- Contact Form Section -->
     <section class="contact-form-section" role="region" aria-labelledby="contact-form-title">
       <h2 id="contact-form-title">
-        Per lavori su commissione, collaborazioni o altro
+        {{ t.sectionTitle }}
       </h2>
 
       <p class="form-lead">
-        Compila il form qui sotto, ti contatterò al più presto.
+        {{ t.leadText }}
       </p>
 
       <p v-if="success" id="success-desc" class="form-success outline-none" role="status" aria-live="polite"
         tabindex="-1">
-        ✅ Messaggio inviato, grazie! ti contatterò al più presto.
+        {{ t.successMsg }}
       </p>
 
       <p v-if="errorMsg" id="error-desc" class="form-error" role="alert" aria-live="assertive">
@@ -210,44 +268,45 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <form class="contact-form" @submit="preSubmit" novalidate
         :aria-describedby="success ? 'success-desc' : (errorMsg ? 'error-desc' : null)">
-
+        <!-- Honeypot -->
         <div class="hp-wrap" aria-hidden="true">
-          <label for="hp">Lascia questo campo vuoto</label>
+          <label for="hp">{{ t.hpLabel }}</label>
           <input id="hp" v-model="honeypot" type="text" tabindex="-1" autocomplete="off" />
         </div>
 
         <div class="form-group">
-          <label for="email">Email*</label>
+          <label for="email">{{ t.lblEmail }}</label>
           <input v-model="email" type="email" id="email" required aria-required="true" inputmode="email"
-            autocomplete="email" placeholder="La tua email" />
+            autocomplete="email" :placeholder="t.phEmail" />
         </div>
 
         <div class="form-group">
-          <label for="name">Nome*</label>
+          <label for="name">{{ t.lblName }}</label>
           <input v-model="name" type="text" id="name" required aria-required="true" autocomplete="name"
-            placeholder="Il tuo nome" />
+            :placeholder="t.phName" />
         </div>
 
         <div class="form-group">
-          <label for="message">Scrivi qui la tua richiesta*</label>
+          <label for="message">{{ t.lblMessage }}</label>
           <textarea v-model="message" id="message" rows="5" required aria-required="true"
-            placeholder="Scrivi qui la tua richiesta…"></textarea>
+            :placeholder="t.phMessage"></textarea>
         </div>
 
-        <button type="submit" class="btn primary-btn" :disabled="loading">
-          <span v-if="!loading">Invia</span>
-          <span v-else>Invio…</span>
+        <button type="submit" class="btn primary-btn cursor-pointer" :disabled="loading">
+          <span v-if="!loading">{{ t.btnSend }}</span>
+          <span v-else>{{ t.btnSending }}</span>
         </button>
       </form>
     </section>
 
+    <!-- Confirmation Modal -->
     <div v-if="showConfirm" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title"
       aria-describedby="confirm-desc">
       <div class="modal-card" role="document">
-        <h3 id="confirm-title">Confermi l'invio?</h3>
+        <h3 id="confirm-title">{{ t.modalTitle }}</h3>
 
         <p id="confirm-desc" class="modal-text">
-          Controlla i dati e premi “Sì, invia”.
+          {{ t.modalDesc }}
         </p>
 
         <div class="recap">
@@ -257,24 +316,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           </div>
 
           <div class="recap-row">
-            <span class="recap-label">Nome</span>
+            <span class="recap-label">{{ t.modalName }}</span>
             <span class="recap-value">{{ name }}</span>
           </div>
 
           <div class="recap-row recap-message">
-            <span class="recap-label">Messaggio</span>
+            <span class="recap-label">{{ t.modalMessage }}</span>
             <pre class="recap-value prewrap">{{ message }}</pre>
           </div>
         </div>
 
         <div class="modal-actions">
           <button class="btn modal-btn confirm" @click="confirmSend" :disabled="loading">
-            <span v-if="!loading">Sì, invia</span>
-            <span v-else>Invio…</span>
+            <span v-if="!loading">{{ t.modalConfirm }}</span>
+            <span v-else>{{ t.btnSending }}</span>
           </button>
 
           <button class="btn modal-btn cancel" @click="closeConfirm" :disabled="loading">
-            Annulla
+            {{ t.modalCancel }}
           </button>
         </div>
       </div>
@@ -335,10 +394,6 @@ body.dark-mode .hero-image-container {
   .header-content-wrapper h1 {
     font-size: 2.3rem;
     line-height: 1.2;
-  }
-
-  .filters-wrapper {
-    justify-content: flex-start;
   }
 }
 
@@ -404,25 +459,22 @@ textarea:focus {
 
 .primary-btn {
   align-self: center;
-  background-color: var(--color-accent);
   color: var(--color-text);
   font-weight: 700;
   font-size: 18px;
   line-height: 1;
   padding: 16px 28px;
-  border: 1px solid var(--color-accent);;
+  border: 1px solid var(--color-accent);
   border-radius: 0;
   background-color: color-mix(in srgb, var(--color-accent) 70%, transparent);
   transition: transform 0.08s ease,
-      background-color 0.2s ease,
-      color 0.2s ease;
-      
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .primary-btn:hover {
   background-color: var(--color-hover);
   color: var(--color-surface);
-  
 }
 
 .primary-btn:disabled {

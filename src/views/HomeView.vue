@@ -4,11 +4,13 @@
    ========================================================================== */
 import { RouterLink } from 'vue-router'
 import Handwave from '@/components/Handwave.vue'
-
 import { ref, computed, onMounted, nextTick, onBeforeUnmount, watch } from 'vue'
-
 import { db } from '@/firebase/config'
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
+import { useLanguage } from '@/composables/useLanguage'
+
+/* Gestione Lingua Reattiva */
+const { currentLang } = useLanguage()
 
 /* Stato base */
 const loading = ref(true)
@@ -18,10 +20,8 @@ const illustrations = ref([])
 
 /* ==========================================================================
    Scroll iniziale
-   - Garantisce l’avvio view dall’inizio pagina
    ========================================================================== */
 window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-
 
 /* Slider progetti */
 const projViewport = ref(null)
@@ -235,16 +235,16 @@ watch(illustrations, async () => {
         </h1>
 
         <h2 class="role m-0 mb-[20px] font-normal leading-[1.28] uppercase whitespace-nowrap text-accent ">
-          Digital Designer &amp; Illustratrice
+          {{ currentLang === 'en' ? 'Digital Designer & Illustrator' : 'Digital Designer & Illustratrice' }}
         </h2>
 
         <p class="payoff mt-2 mb-4 ">
-          Se vuoi saperne di più di me
+          {{ currentLang === 'en' ? 'If you want to know more about me' : 'Se vuoi saperne di più di me' }}
         </p>
 
         <RouterLink to="/about" class="cta hero-btn whitespace-nowrap"
-          aria-label="Clicca qui per saperne di più su Anna Cazzanelli">
-          Clicca qui
+          :aria-label="currentLang === 'en' ? 'Click here to know more about Anna Cazzanelli' : 'Clicca qui per saperne di più su Anna Cazzanelli'">
+          {{ currentLang === 'en' ? 'Click here' : 'Clicca qui' }}
         </RouterLink>
       </div>
 
@@ -256,11 +256,11 @@ watch(illustrations, async () => {
     <section class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6 accent-divider" role="region"
       aria-labelledby="projects-title">
       <h2 id="projects-title" class="section-title mt-5 mb-20 text-accent">
-        Alcuni Progetti Digitali
+        {{ currentLang === 'en' ? 'Selected Digital Projects' : 'Alcuni Progetti Digitali' }}
       </h2>
 
       <div v-if="loading" class="opacity-70" role="status" aria-live="polite">
-        Caricamento…
+        {{ currentLang === 'en' ? 'Loading…' : 'Caricamento…' }}
       </div>
 
       <p v-else-if="error" class="text-[#b00020]" role="alert">
@@ -269,38 +269,42 @@ watch(illustrations, async () => {
 
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevProj" :disabled="projPrevDisabled"
-          aria-label="Progetto precedente">
+          :aria-label="currentLang === 'en' ? 'Previous project' : 'Progetto precedente'">
           <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
         <div class="carousel-viewport" ref="projViewport">
           <div class="carousel-track" ref="projTrack" role="list">
             <RouterLink v-for="(p, index) in projects" :key="p.firestoreId" class="card"
-              :to="`/projects/${p.firestoreId}`" :aria-label="`Apri progetto: ${p.title || p.firestoreId}`"
-              :title="`Apri progetto: ${p.title || 'Senza titolo'}`" role="listitem"
-              :aria-hidden="index < projIndex || index >= projIndex + visibleCount ? 'true' : null"
+              :to="`/projects/${p.firestoreId}`"
+              :aria-label="`${currentLang === 'en' ? 'Open project' : 'Apri progetto'}: ${(currentLang === 'en' && p.title_en ? p.title_en : p.title) || p.firestoreId}`"
+              :title="`${currentLang === 'en' ? 'Open project' : 'Apri progetto'}: ${(currentLang === 'en' && p.title_en ? p.title_en : p.title) || (currentLang === 'en' ? 'Untitled' : 'Senza titolo')}`"
+              role="listitem" :aria-hidden="index < projIndex || index >= projIndex + visibleCount ? 'true' : null"
               :tabindex="index < projIndex || index >= projIndex + visibleCount ? '-1' : '0'">
 
               <div class="card-frame">
                 <img :src="p.img || p.main_image"
-                  :alt="p.title ? `Anteprima progetto: ${p.title}` : 'Anteprima progetto'" loading="lazy" />
+                  :alt="p.title ? `${currentLang === 'en' ? 'Project preview' : 'Anteprima progetto'}: ${(currentLang === 'en' && p.title_en ? p.title_en : p.title)}` : (currentLang === 'en' ? 'Project preview' : 'Anteprima progetto')"
+                  loading="lazy" />
               </div>
 
               <h3 class="card-title mt-4">
-                {{ p.title || 'Senza titolo' }}
+                {{ (currentLang === 'en' && p.title_en ? p.title_en : p.title) || (currentLang === 'en' ? 'Untitled' :
+                'Senza titolo') }}
               </h3>
             </RouterLink>
           </div>
         </div>
 
-        <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled" aria-label="Prossimo progetto">
+        <button class="nav" type="button" @click="nextProj" :disabled="projNextDisabled"
+          :aria-label="currentLang === 'en' ? 'Next project' : 'Prossimo progetto'">
           <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
         <RouterLink to="/projects" class="cta-see-all">
-          <span>Vedi tutti i progetti</span>
+          <span>{{ currentLang === 'en' ? 'See all projects' : 'Vedi tutti i progetti' }}</span>
           <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
       </div>
@@ -308,11 +312,11 @@ watch(illustrations, async () => {
 
     <section class="mx-auto max-w-[1280px] px-desktop pt-20 pb-6" role="region" aria-labelledby="illustrations-title">
       <h2 id="illustrations-title" class="section-title mt-5 mb-20 text-accent">
-        Alcune illustrazioni
+        {{ currentLang === 'en' ? 'Selected Illustrations' : 'Alcune illustrazioni' }}
       </h2>
 
       <div v-if="loading" class="opacity-70" role="status" aria-live="polite">
-        Caricamento…
+        {{ currentLang === 'en' ? 'Loading…' : 'Caricamento…' }}
       </div>
 
       <p v-else-if="error" class="text-[#b00020]" role="alert">
@@ -321,33 +325,35 @@ watch(illustrations, async () => {
 
       <div v-else class="grid grid-cols-[48px_1fr_48px] items-center gap-2">
         <button class="nav" type="button" @click="prevIll" :disabled="illPrevDisabled"
-          aria-label="Illustrazione precedente">
+          :aria-label="currentLang === 'en' ? 'Previous illustration' : 'Illustrazione precedente'">
           <img src="/icone/icon-prev.svg" class="icon" alt="" />
         </button>
 
         <div class="carousel-viewport" ref="illViewport">
           <div class="carousel-track" ref="illTrack" role="list">
             <RouterLink v-for="(i, index) in illustrations" :key="i.firestoreId" class="card-illustration"
-              :to="`/illustrations/${i.firestoreId}`" :aria-label="`Apri illustrazione: ${i.title || i.firestoreId}`"
-              :title="`Apri illustrazione: ${i.title || 'Senza titolo'}`" role="listitem"
-              :aria-hidden="index < illSnapIndex || index >= illSnapIndex + 1 ? 'true' : null"
+              :to="`/illustrations/${i.firestoreId}`"
+              :aria-label="`${currentLang === 'en' ? 'Open illustration' : 'Apri illustrazione'}: ${(currentLang === 'en' && i.title_en ? i.title_en : i.title) || i.firestoreId}`"
+              :title="`${currentLang === 'en' ? 'Open illustration' : 'Apri illustrazione'}: ${(currentLang === 'en' && i.title_en ? i.title_en : i.title) || (currentLang === 'en' ? 'Untitled' : 'Senza titolo')}`"
+              role="listitem" :aria-hidden="index < illSnapIndex || index >= illSnapIndex + 1 ? 'true' : null"
               :tabindex="index < illSnapIndex || index >= illSnapIndex + 1 ? '-1' : '0'">
 
               <img :src="i.img || i.main_image"
-                :alt="i.title ? `Anteprima illustrazione: ${i.title}` : 'Anteprima illustrazione'" loading="lazy" />
+                :alt="i.title ? `${currentLang === 'en' ? 'Illustration preview' : 'Anteprima illustrazione'}: ${(currentLang === 'en' && i.title_en ? i.title_en : i.title)}` : (currentLang === 'en' ? 'Illustration preview' : 'Anteprima illustrazione')"
+                loading="lazy" />
             </RouterLink>
           </div>
         </div>
 
         <button class="nav" type="button" @click="nextIll" :disabled="illNextDisabled"
-          aria-label="Prossima illustrazione">
+          :aria-label="currentLang === 'en' ? 'Next illustration' : 'Prossima illustrazione'">
           <img src="/icone/icon-next.svg" class="icon" alt="" />
         </button>
       </div>
 
       <div class="section-cta-projects -mt-10 flex justify-end">
         <RouterLink to="/illustrations" class="cta-see-all">
-          <span>Vedi tutte le illustrazioni</span>
+          <span>{{ currentLang === 'en' ? 'See all illustrations' : 'Vedi tutte le illustrazioni' }}</span>
           <img src="/icone/icon-arrowdx.svg" class="icon" alt="" />
         </RouterLink>
       </div>
@@ -469,7 +475,6 @@ watch(illustrations, async () => {
   }
 }
 
-
 /* CTA hero */
 .cta {
   display: inline-block;
@@ -508,7 +513,6 @@ watch(illustrations, async () => {
   outline-offset: 3px;
 }
 
-
 /* Divider accent */
 .accent-divider {
   border-top: 2px solid var(--color-accent);
@@ -528,7 +532,6 @@ watch(illustrations, async () => {
   }
 }
 
-/* CORRETTO: Riquadro di hover sulle freccette circolare, morbido ed elegante */
 .nav {
   width: 48px;
   height: 48px;
@@ -537,8 +540,6 @@ watch(illustrations, async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
- 
-  /* Trasforma il riquadro in un cerchio perfetto */
   cursor: pointer;
   transition:
     background-color 0.25s ease,
@@ -546,7 +547,6 @@ watch(illustrations, async () => {
 }
 
 .nav:hover {
-  /* Genera un velo leggero e coordinato alla tua tinta accent */
   background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 
@@ -589,7 +589,6 @@ watch(illustrations, async () => {
   flex-direction: column;
 }
 
-/* CORRETTO: Rimosso lo sfondo e il padding forzato per eliminare il contorno sgradevole */
 .card-frame {
   margin: 0;
   padding: 0;
@@ -618,7 +617,6 @@ watch(illustrations, async () => {
 }
 
 /* Card illustrazione */
-/* CORRETTO: Eliminato lo sfondo e il padding isolante per ripulire l'anteprima */
 .card-illustration {
   flex: 0 0 auto;
   background: transparent;
@@ -651,7 +649,6 @@ watch(illustrations, async () => {
 }
 
 /* CTA “Scopri di più” */
-/* CORRETTO: Agganciato saldamente e in modo coerente alle tue tonalità di --color-link */
 .cta-see-all {
   display: inline-flex;
   align-items: center;
@@ -661,9 +658,7 @@ watch(illustrations, async () => {
   font-family: var(--font-body);
   text-decoration: none;
   color: var(--color-link);
-  /* Usa il viola link nativo del main.css */
   opacity: 1;
-  /* Piena visibilità */
   transition:
     color 0.25s ease,
     transform 0.2s ease;
@@ -671,7 +666,6 @@ watch(illustrations, async () => {
   white-space: nowrap;
 }
 
-/* Cambia nel tuo viola scuro (o lilla in dark) definito per l'hover */
 .cta-see-all:hover {
   color: var(--color-hover);
 }

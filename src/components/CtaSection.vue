@@ -1,5 +1,29 @@
 <script setup>
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useLanguage } from '@/composables/useLanguage'
+
+const { currentLang } = useLanguage()
+
+const UI_TEXT = {
+  it: {
+    srTitle: 'Contatti',
+    text: 'Per lavori su commissione, collaborazioni...',
+    btn: 'Contattami ora',
+    btnTitle: 'Contattami'
+  },
+  en: {
+    srTitle: 'Contact',
+    text: 'For commissions, collaborations, or inquiries...',
+    btn: 'Contact me now',
+    btnTitle: 'Contact me'
+  }
+}
+
+const t = computed(() => {
+  const lang = String(currentLang?.value || currentLang || 'it').toLowerCase()
+  return lang.startsWith('en') ? UI_TEXT.en : UI_TEXT.it
+})
 </script>
 
 <template>
@@ -8,18 +32,17 @@ import { RouterLink } from 'vue-router'
            bg-surface text-text
            border-t-2 border-[var(--color-accent)]
            min-h-[clamp(260px,32vh,420px)] md:min-h-[clamp(220px,40vh,360px)]">
-    <h2 id="cta-title" class="sr-only">Contatti</h2>
+    <h2 id="cta-title" class="sr-only">{{ t.srTitle }}</h2>
 
     <p class="cta-text m-0 text-center opacity-90">
-      Per lavori su commissione, collaborazioni...
+      {{ t.text }}
     </p>
 
     <RouterLink to="/contacts" class="cta-btn inline-block px-7 py-4 leading-none
              text-[18px] border border-[var(--color-accent)] no-underline
-             transition-[transform,background-color,color,font-weight] duration-200" title="Contattami">
-      Contattami ora
+             transition-[transform,background-color,color,font-weight] duration-200" :title="t.btnTitle">
+      {{ t.btn }}
     </RouterLink>
-
   </section>
 </template>
 

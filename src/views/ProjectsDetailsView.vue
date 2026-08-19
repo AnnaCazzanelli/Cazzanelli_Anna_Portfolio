@@ -3,9 +3,13 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { db } from '@/firebase/config'
 import { doc, getDoc, collection, query, orderBy, getDocs } from 'firebase/firestore'
+import { useLanguage } from '@/composables/useLanguage'
+
+const { currentLang } = useLanguage()
+const isEnglish = computed(() => currentLang.value === 'en')
 
 const route = useRoute()
-const project = ref(null)
+const rawProject = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
 
@@ -88,15 +92,41 @@ const nextProjectId = computed(() => {
   return null
 })
 
+/* ==========================================================================
+   Dati Progetto Localizzati Reattivi
+   ========================================================================== */
+const project = computed(() => {
+  if (!rawProject.value) return null
+  const d = rawProject.value
+  const en = isEnglish.value
+
+  let localizedTags = d.tag || []
+  if (en && Array.isArray(d.tag_en) && d.tag_en.length > 0) {
+    localizedTags = d.tag_en
+  }
+
+  return {
+    ...d,
+    title: en ? (d.title_en || d.title) : d.title,
+    description: en ? (d.description_en || d.description) : d.description,
+    category: en ? (d.category_en || d.category) : d.category,
+    rawCategory: (d.category || 'other').trim().toLowerCase(),
+    tools: en ? (d.tools_en || d.tools) : d.tools,
+    tag: localizedTags
+  }
+})
+
 const mediaItems = computed(() => {
-  const g = project.value?.gallery
+  const g = rawProject.value?.gallery
   if (!Array.isArray(g)) return []
+  const en = isEnglish.value
+
   return g
     .map((it) => {
       if (it && typeof it === 'object') {
         const hi = (it.high_res || '').trim()
         const lo = (it.low_res || '').trim()
-        const caption = (it.caption || '').trim()
+        const caption = (en && it.caption_en ? it.caption_en : (it.caption || '')).trim()
 
         const checkHi = hi.toLowerCase()
         const checkLo = lo.toLowerCase()
@@ -139,13 +169,15 @@ const mediaItems = computed(() => {
 })
 
 const normalizedLinks = computed(() => {
-  if (!project.value?.links || !Array.isArray(project.value.links)) return []
-  return project.value.links.map(lnk => {
+  if (!rawProject.value?.links || !Array.isArray(rawProject.value.links)) return []
+  const en = isEnglish.value
+
+  return rawProject.value.links.map(lnk => {
     if (!lnk) return null
-    const labelKey = Object.keys(lnk).find(k => k.trim() === 'label')
+    const labelKey = Object.keys(lnk).find(k => k.trim() === (en && lnk.label_en ? 'label_en' : 'label'))
     const urlKey = Object.keys(lnk).find(k => k.trim() === 'url')
     return {
-      label: labelKey ? lnk[labelKey] : 'Vedi materiale',
+      label: labelKey ? lnk[labelKey] : (en ? 'View materials' : 'Vedi materiale'),
       url: urlKey ? lnk[urlKey] : '#'
     }
   }).filter(l => l !== null)
@@ -161,7 +193,7 @@ const CATEGORY_COLORS = {
 }
 
 const tagStyle = computed(() => {
-  const catNormalized = String(project.value?.category || '').trim().toLowerCase()
+  const catNormalized = project.value?.rawCategory || 'other'
   const c = CATEGORY_COLORS[catNormalized] || CATEGORY_COLORS['other']
   return {
     background: c.bg,
@@ -173,7 +205,7 @@ const tagStyle = computed(() => {
 async function fetchProjectData() {
   loading.value = true
   notFound.value = false
-  project.value = null
+  rawProject.value = null
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   const id = String(route.params.id || '').trim()
 
@@ -183,7 +215,7 @@ async function fetchProjectData() {
       notFound.value = true
       return
     }
-    project.value = { id: snap.id, ...snap.data() }
+    rawProject.value = { id: snap.id, ...snap.data() }
 
     if (orderedIds.value.length === 0) {
       const colRef = collection(db, 'projects')
@@ -214,28 +246,32 @@ watch(() => route.params.id, fetchProjectData)
 <template>
   <main id="main-content" tabindex="-1" class="page bg-surface text-text">
     <div v-if="loading" class="loading py-40 text-center opacity-80" role="status" aria-live="polite">
-      Caricamento progetto…
+      {{ isEnglish ? 'Loading project…' : 'Caricamento progetto…' }}
     </div>
 
     <div v-else-if="notFound" class="notfound py-40 text-center opacity-80" role="alert">
-      <p class="desc text-center">Progetto non trovato.</p>
-      <RouterLink to="/projects" class="back-link text-accent">Torna ai progetti</RouterLink>
+      <p class="desc text-center">{{ isEnglish ? 'Project not found.' : 'Progetto non trovato.' }}</p>
+      <RouterLink to="/projects" class="back-link text-accent">
+        {{ isEnglish ? 'Back to projects' : 'Torna ai progetti' }}
+      </RouterLink>
     </div>
 
     <div v-else-if="project" class="project-behance-container mx-auto relative">
 
       <div class="top-nav-bar flex justify-between items-center w-full px-4 md:px-0 mb-8">
         <RouterLink to="/projects" class="back-btn w-12 h-12 inline-flex items-center justify-center bg-transparent"
-          aria-label="Torna alla lista progetti" title="Torna alla lista progetti">
+          :aria-label="isEnglish ? 'Back to projects list' : 'Torna alla lista progetti'" 
+          :title="isEnglish ? 'Back to projects list' : 'Torna alla lista progetti'">
           <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="w-6 h-6 block" />
-          <span class="sr-only">Torna alla lista progetti</span>
+          <span class="sr-only">{{ isEnglish ? 'Back to projects list' : 'Torna alla lista progetti' }}</span>
         </RouterLink>
 
         <RouterLink v-if="nextProjectId" :to="{ name: 'project-details', params: { id: nextProjectId } }"
           class="next-project-btn class-link w-12 h-12 inline-flex items-center justify-center bg-transparent"
-          aria-label="Vai al progetto successivo" title="Vai al progetto successivo">
+          :aria-label="isEnglish ? 'Go to next project' : 'Vai al progetto successivo'" 
+          :title="isEnglish ? 'Go to next project' : 'Vai al progetto successivo'">
           <img src="/icone/icon-arrowdx.svg" alt="" aria-hidden="true" class="w-6 h-6 block" />
-          <span class="sr-only">Progetto successivo</span>
+          <span class="sr-only">{{ isEnglish ? 'Next project' : 'Progetto successivo' }}</span>
         </RouterLink>
       </div>
 
@@ -245,19 +281,19 @@ watch(() => route.params.id, fetchProjectData)
         <div
           class="project-top-meta-desktop hidden md:flex flex-wrap justify-center items-baseline gap-x-8 gap-y-2 mb-14">
           <div v-if="project.year" class="meta-inline-item-top">
-            <span class="meta-label inline-version font-bold">Anno:</span>
+            <span class="meta-label inline-version font-bold">{{ isEnglish ? 'Year:' : 'Anno:' }}</span>
             <span class="desc-text">{{ project.year }}</span>
           </div>
 
           <div class="meta-inline-item-top">
-            <span class="meta-label inline-version font-bold">Categoria:</span>
+            <span class="meta-label inline-version font-bold">{{ isEnglish ? 'Category:' : 'Categoria:' }}</span>
             <span>
               <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
             </span>
           </div>
 
           <div v-if="project.link_url || project.drive_url || normalizedLinks.length" class="meta-inline-item-top">
-            <span class="meta-label inline-version font-bold">Link esterni:</span>
+            <span class="meta-label inline-version font-bold">{{ isEnglish ? 'External links:' : 'Link esterni:' }}</span>
             <div class="inline-links-flex">
               <template v-if="normalizedLinks.length > 0">
                 <a v-for="lnk in normalizedLinks" :key="lnk.url" :href="lnk.url" target="_blank"
@@ -268,11 +304,11 @@ watch(() => route.params.id, fetchProjectData)
               <template v-else>
                 <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
                   class="underline-link">
-                  {{ project.link_label || 'Visualizza materiale' }}
+                  {{ (isEnglish && project.link_label_en ? project.link_label_en : project.link_label) || (isEnglish ? 'View materials' : 'Visualizza materiale') }}
                 </a>
                 <a v-else-if="project.drive_url" :href="project.drive_url" target="_blank" rel="noopener noreferrer"
                   class="underline-link">
-                  Materiali aggiuntivi
+                  {{ isEnglish ? 'Additional materials' : 'Materiali aggiuntivi' }}
                 </a>
               </template>
             </div>
@@ -281,7 +317,7 @@ watch(() => route.params.id, fetchProjectData)
       </header>
 
       <section class="behance-showcase w-full mb-14 flex flex-col items-center"
-        aria-label="Galleria opere del progetto">
+        :aria-label="isEnglish ? 'Project showcase gallery' : 'Galleria opere del progetto'">
         <div v-for="(media, index) in mediaItems" :key="index" class="showcase-item w-full flex flex-col items-center">
 
           <div v-if="media.type === 'video'"
@@ -294,7 +330,7 @@ watch(() => route.params.id, fetchProjectData)
           <div v-else class="image-wrapper w-full flex justify-center cursor-zoom-in" @click="openLightbox(media.hi)">
             <picture class="block w-full">
               <source media="(max-width: 768px)" :srcset="media.lo" />
-              <img :src="media.hi" :alt="`${project.title} - Dettaglio ${index + 1}`"
+              <img :src="media.hi" :alt="`${project.title} - ${isEnglish ? 'Detail' : 'Dettaglio'} ${index + 1}`"
                 class="behance-img block mx-auto w-full h-auto" loading="lazy" />
             </picture>
           </div>
@@ -305,22 +341,22 @@ watch(() => route.params.id, fetchProjectData)
         </div>
       </section>
 
-      <section class="meta grid gap-12 lg:gap-20 mt-4 px-4 md:px-0" aria-label="Dettagli e specifiche del progetto">
+      <section class="meta grid gap-12 lg:gap-20 mt-4 px-4 md:px-0" :aria-label="isEnglish ? 'Project details and specifications' : 'Dettagli e specifiche del progetto'">
 
         <div class="mobile-behance-summary md:hidden flex flex-col gap-6 w-full">
 
           <div v-if="project.year" class="mobile-meta-block">
-            <div class="meta-label">Anno:</div>
+            <div class="meta-label">{{ isEnglish ? 'Year:' : 'Anno:' }}</div>
             <p class="desc m-0">{{ project.year }}</p>
           </div>
 
           <div class="mobile-meta-block">
-            <div class="meta-label">Categoria:</div>
+            <div class="meta-label">{{ isEnglish ? 'Category:' : 'Categoria:' }}</div>
             <p class="m-0"><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
           </div>
 
           <div v-if="project.link_url || project.drive_url || normalizedLinks.length" class="mobile-meta-block">
-            <div class="meta-label">Link esterni:</div>
+            <div class="meta-label">{{ isEnglish ? 'External links:' : 'Link esterni:' }}</div>
             <div class="flex flex-wrap gap-3 mt-1">
               <template v-if="normalizedLinks.length > 0">
                 <a v-for="lnk in normalizedLinks" :key="'mob-' + lnk.url" :href="lnk.url" target="_blank"
@@ -331,14 +367,14 @@ watch(() => route.params.id, fetchProjectData)
               <template v-else>
                 <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
                   class="underline-link font-medium">
-                  {{ project.link_label || 'Visualizza materiale' }}
+                  {{ (isEnglish && project.link_label_en ? project.link_label_en : project.link_label) || (isEnglish ? 'View materials' : 'Visualizza materiale') }}
                 </a>
               </template>
             </div>
           </div>
 
           <div class="mobile-meta-block mt-2">
-            <h2 class="meta-label section-heading-style">Descrizione</h2>
+            <h2 class="meta-label section-heading-style">{{ isEnglish ? 'Description' : 'Descrizione' }}</h2>
             <div v-if="project.description" class="project-description leading-relaxed mt-2"
               v-html="project.description">
             </div>
@@ -347,13 +383,13 @@ watch(() => route.params.id, fetchProjectData)
           <button @click="openMobileInfo"
             class="mobile-trigger-info-btn text-left mt-2 border-t border-black/10 dark:border-white/10 pt-4 focus:outline-none"
             aria-haspopup="dialog">
-            Mostra maggiori dettagli
+            {{ isEnglish ? 'Show more details' : 'Mostra maggiori dettagli' }}
           </button>
         </div>
 
         <div class="hidden md:contents">
           <div class="col">
-            <h2 class="meta-label section-heading-style">Descrizione</h2>
+            <h2 class="meta-label section-heading-style">{{ isEnglish ? 'Description' : 'Descrizione' }}</h2>
             <div v-if="project.description" class="project-description leading-relaxed mt-4"
               v-html="project.description">
             </div>
@@ -361,19 +397,19 @@ watch(() => route.params.id, fetchProjectData)
 
           <div class="info-meta-col h-fit">
             <div class="panel-header-wrapper">
-              <h2 class="meta-label section-heading-style panel-border-bottom">Dettagli</h2>
+              <h2 class="meta-label section-heading-style panel-border-bottom">{{ isEnglish ? 'Details' : 'Dettagli' }}</h2>
             </div>
 
             <dl class="meta-list flex flex-col gap-7 mt-6">
               <template v-if="project.year">
-                <dt class="meta-label">Anno:</dt>
+                <dt class="meta-label">{{ isEnglish ? 'Year:' : 'Anno:' }}</dt>
                 <dd>
                   <p class="desc">{{ project.year }}</p>
                 </dd>
               </template>
 
               <template v-if="project.link_url || project.drive_url || normalizedLinks.length">
-                <dt class="meta-label">Link esterni:</dt>
+                <dt class="meta-label">{{ isEnglish ? 'External links:' : 'Link esterni:' }}</dt>
                 <dd class="flex flex-col gap-2 mt-1">
                   <template v-if="normalizedLinks.length > 0">
                     <a v-for="lnk in normalizedLinks" :key="'sidebar-' + lnk.url" :href="lnk.url" target="_blank"
@@ -384,19 +420,19 @@ watch(() => route.params.id, fetchProjectData)
                   <template v-else>
                     <a v-if="project.link_url" :href="project.link_url" target="_blank" rel="noopener noreferrer"
                       class="underline-link w-fit">
-                      {{ project.link_label || 'Visualizza materiale' }}
+                      {{ (isEnglish && project.link_label_en ? project.link_label_en : project.link_label) || (isEnglish ? 'View materials' : 'Visualizza materiale') }}
                     </a>
                   </template>
                 </dd>
               </template>
 
-              <dt class="meta-label">Categoria:</dt>
+              <dt class="meta-label">{{ isEnglish ? 'Category:' : 'Categoria:' }}</dt>
               <dd class="mt-1">
                 <span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span>
               </dd>
 
               <template v-if="project.tag?.length">
-                <dt class="meta-label">Tag:</dt>
+                <dt class="meta-label">{{ isEnglish ? 'Tags:' : 'Tag:' }}</dt>
                 <dd>
                   <ul class="tags mt-1">
                     <li v-for="(t, i) in project.tag" :key="i" class="pill" :style="tagStyle">{{ t }}</li>
@@ -405,7 +441,7 @@ watch(() => route.params.id, fetchProjectData)
               </template>
 
               <template v-if="project.tools">
-                <dt class="meta-label">Tools:</dt>
+                <dt class="meta-label">{{ isEnglish ? 'Tools:' : 'Tools:' }}</dt>
                 <dd>
                   <p class="desc">{{ project.tools }}</p>
                 </dd>
@@ -423,22 +459,22 @@ watch(() => route.params.id, fetchProjectData)
           class="mobile-info-card relative w-full p-6 text-text border-t border-black/20 dark:border-white/20 shadow-2xl flex flex-col gap-6 max-h-[85vh] overflow-y-auto">
           <div
             class="mobile-modal-top-bar flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-3">
-            <h2 class="meta-label section-heading-style m-0">Dettagli</h2>
+            <h2 class="meta-label section-heading-style m-0">{{ isEnglish ? 'Details' : 'Dettagli' }}</h2>
             <button @click="closeMobileInfo"
               class="mobile-info-close-btn flex items-center justify-center p-2 focus:outline-none"
-              aria-label="Chiudi informazioni">
+              :aria-label="isEnglish ? 'Close information' : 'Chiudi informazioni'">
               <img src="/icone/icon-cross.svg" alt="" aria-hidden="true" class="w-4 h-4 block" />
             </button>
           </div>
 
           <dl class="meta-list flex flex-col gap-6 m-0">
-            <dt class="meta-label">Categoria:</dt>
+            <dt class="meta-label">{{ isEnglish ? 'Category:' : 'Categoria:' }}</dt>
             <dd class="mt-1">
               <p><span class="pill" :style="tagStyle">{{ project.category || 'Other' }}</span></p>
             </dd>
 
             <template v-if="project.tag?.length">
-              <dt class="meta-label">Tag:</dt>
+              <dt class="meta-label">{{ isEnglish ? 'Tags:' : 'Tag:' }}</dt>
               <dd>
                 <ul class="tags mt-1">
                   <li v-for="(t, i) in project.tag" :key="'mobtag-' + i" class="pill" :style="tagStyle">{{ t }}</li>
@@ -447,7 +483,7 @@ watch(() => route.params.id, fetchProjectData)
             </template>
 
             <template v-if="project.tools">
-              <dt class="meta-label">Tools:</dt>
+              <dt class="meta-label">{{ isEnglish ? 'Tools:' : 'Tools:' }}</dt>
               <dd>
                 <p class="desc">{{ project.tools }}</p>
               </dd>
@@ -461,7 +497,7 @@ watch(() => route.params.id, fetchProjectData)
         @click="closeLightbox">
         <button
           class="lightbox-close-btn absolute top-6 right-6 bg-transparent border-0 w-12 h-12 flex items-center justify-center cursor-pointer transition-transform"
-          @click.stop="closeLightbox" aria-label="Chiudi visualizzazione a schermo intero">
+          @click.stop="closeLightbox" :aria-label="isEnglish ? 'Close full screen view' : 'Chiudi visualizzazione a schermo intero'">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6 svg-accent-icon"
             aria-hidden="true">
             <path
@@ -469,7 +505,7 @@ watch(() => route.params.id, fetchProjectData)
           </svg>
         </button>
         <div class="lightbox-content-wrapper max-w-full max-h-full flex items-center justify-center" @click.stop>
-          <img :src="activeLightboxImage" alt="Dettaglio opera ingrandito"
+          <img :src="activeLightboxImage" :alt="isEnglish ? 'Zoomed detail artwork' : 'Dettaglio opera ingrandito'"
             class="lightbox-image max-w-full max-h-[90vh] object-contain select-none shadow-2xl" />
         </div>
       </div>
@@ -709,7 +745,6 @@ h2.meta-label.section-heading-style {
 
   to {
     transform: scale(1);
-    opacity: 1;
   }
 }
 

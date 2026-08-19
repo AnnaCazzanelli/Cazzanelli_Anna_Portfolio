@@ -6,8 +6,11 @@ import { ref, computed, onMounted } from 'vue'
 import { db } from '@/firebase/config'
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { RouterLink } from 'vue-router'
+import { useLanguage } from '@/composables/useLanguage'
 
-const projects = ref([])
+const { currentLang } = useLanguage()
+
+const rawProjects = ref([])
 const loading = ref(true)
 const error = ref(null)
 const activeFilter = ref('All')
@@ -22,7 +25,7 @@ onMounted(() => {
 
 /* ==========================================================================
    Configurazione Categorie e Colori
-   ========================================================================= */
+   ========================================================================== */
 const CATEGORY_COLORS = {
   'Motion Graphics': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
   'Web Design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
@@ -32,14 +35,40 @@ const CATEGORY_COLORS = {
   Other: { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
-const filterOptions = ['All', 'Case Studies', 'Web Design', 'Visual Design', 'Communication' , 'Motion Graphics'];
+const filterOptions = ['All', 'Case Studies', 'Web Design', 'Visual Design', 'Communication', 'Motion Graphics']
+
+/* ==========================================================================
+   Dati Localizzati Reattivi (Titoli, Categorie e Tag ITA/ENG)
+   ========================================================================= */
+const isEnglish = computed(() => currentLang.value === 'en')
+
+const projects = computed(() => {
+  const en = isEnglish.value
+  return rawProjects.value.map(p => {
+    // Gestione Tag: se in inglese usa tag_en (se presente e non vuoto), altrimenti ripiega su tag
+    let localizedTags = p.tag || []
+    if (en && Array.isArray(p.tag_en) && p.tag_en.length > 0) {
+      localizedTags = p.tag_en
+    }
+
+    return {
+      ...p,
+      title: en ? (p.title_en || p.title) : p.title,
+      category: en ? (p.category_en || p.category) : p.category,
+      rawCategory: (p.category || 'Other').trim(), // Mantenuto per il filtro uniforme
+      tag: localizedTags
+    }
+  })
+})
 
 /* ==========================================================================
    Logica di Filtraggio e Stili
    ========================================================================= */
 const filteredProjects = computed(() => {
   if (activeFilter.value === 'All') return projects.value
-  return projects.value.filter(p => p.category === activeFilter.value)
+  return projects.value.filter(
+    p => p.rawCategory.toLowerCase() === activeFilter.value.toLowerCase()
+  )
 })
 
 function setFilter(filter) {
@@ -52,15 +81,15 @@ function getFilterActiveStyle(category) {
       backgroundColor: 'rgba(var(--accent-rgb), 0.15)',
       color: 'var(--color-accent)',
       boxShadow: '0 0 0 2px var(--color-accent)'
-    };
+    }
   }
-  const c = CATEGORY_COLORS[category];
-  if (!c) return {};
+  const c = CATEGORY_COLORS[category]
+  if (!c) return {}
   return {
     backgroundColor: c.bg,
     color: c.fg,
     boxShadow: `0 0 0 2px ${c.bd}`
-  };
+  }
 }
 
 function badgeStyle(category) {
@@ -76,13 +105,17 @@ function badgeStyle(category) {
    Accessibilità e Fetch
    ========================================================================= */
 function ariaLabelFor(p) {
-  const cat = p.category || 'Categoria non specificata'
+  const cat = p.category || (isEnglish.value ? 'Unspecified category' : 'Categoria non specificata')
   const tags = Array.isArray(p.tag) && p.tag.length ? `. Tag: ${p.tag.join(', ')}.` : ''
-  return `Apri il progetto “${p.title}”. Categoria: ${cat}${tags}`
+  return isEnglish.value
+    ? `Open project “${p.title}”. Category: ${cat}${tags}`
+    : `Apri il progetto “${p.title}”. Categoria: ${cat}${tags}`
 }
 
 function altFor(p) {
-  return `Immagine di copertina del progetto “${p.title}”`
+  return isEnglish.value
+    ? `Cover image of project “${p.title}”`
+    : `Immagine di copertina del progetto “${p.title}”`
 }
 
 async function getProjects() {
@@ -91,12 +124,12 @@ async function getProjects() {
   try {
     const q = query(collection(db, 'projects'), orderBy('order', 'asc'))
     const snap = await getDocs(q)
-    projects.value = snap.docs.map(d => ({
+    rawProjects.value = snap.docs.map(d => ({
       firestoreId: d.id,
       ...(d.data() || {})
     }))
   } catch (e) {
-    error.value = 'Impossibile caricare i progetti.'
+    error.value = isEnglish.value ? 'Unable to load projects.' : 'Impossibile caricare i progetti.'
   } finally {
     loading.value = false
   }
@@ -111,20 +144,24 @@ async function getProjects() {
         <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
         <div
           class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
-          <h1 id="page-title">Progetti Digitali</h1>
+          <h1 id="page-title">{{ isEnglish ? 'Digital Projects' : 'Progetti Digitali' }}</h1>
         </div>
       </section>
 
       <section class="filters-section w-full max-w-[1400px] px-[var(--margin-desktop)] mt-12 mb-16 text-center"
-        role="region" aria-label="Sezione Filtri">
-        <p class="filters-cta payoff mt-2 mb-6 opacity-90">Scegli l'ambito di tuo interesse</p>
+        role="region" :aria-label="isEnglish ? 'Filters Section' : 'Sezione Filtri'">
+        <p class="filters-cta payoff mt-2 mb-6 opacity-90">
+          {{ isEnglish ? 'Choose your area of interest' : "Scegli l'ambito di tuo interesse" }}
+        </p>
         <div class="filters-scroll-wrapper">
-          <div class="filters-wrapper" role="group" aria-label="Filtri progetti per ambito">
+          <div class="filters-wrapper" role="group"
+            :aria-label="isEnglish ? 'Filter projects by category' : 'Filtri progetti per ambito'">
             <button v-for="cat in filterOptions" :key="cat" @click="setFilter(cat)" class="filter-btn"
               :class="{ 'active': activeFilter === cat }" :style="activeFilter === cat ? getFilterActiveStyle(cat) : {}"
-              :aria-pressed="activeFilter === cat"
-              :aria-label="cat === 'All' ? 'Mostra tutti i progetti' : `Mostra progetti dell'ambito ${cat}`">
-              {{ cat === 'All' ? 'Tutte i progetti' : cat }}
+              :aria-pressed="activeFilter === cat" :aria-label="cat === 'All'
+                ? (isEnglish ? 'Show all projects' : 'Mostra tutti i progetti')
+                : (isEnglish ? `Show ${cat} projects` : `Mostra progetti dell'ambito ${cat}`)">
+              {{ cat === 'All' ? (isEnglish ? 'All Projects' : 'Tutti i progetti') : cat }}
             </button>
           </div>
         </div>
@@ -134,7 +171,7 @@ async function getProjects() {
 
       <section v-if="loading"
         class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 max-w-[1400px] w-full mt-0 mb-12 px-[var(--margin-desktop)]"
-        role="status" aria-live="polite" aria-label="Caricamento progetti">
+        role="status" aria-live="polite" :aria-label="isEnglish ? 'Loading projects' : 'Caricamento progetti'">
         <div v-for="n in 4" :key="n" class="project-item skeleton flex flex-col items-center">
           <div class="relative w-full aspect-[1200/800] bg-[var(--color-surface)] skeleton-box"></div>
           <div class="skeleton-line title"></div>
@@ -146,20 +183,19 @@ async function getProjects() {
         role="list">
         <RouterLink v-for="p in filteredProjects" :key="p.firestoreId"
           class="project-item no-underline text-inherit flex flex-col items-center text-center cursor-pointer outline-none"
-         :to="`/projects/${p.firestoreId}`"
-          role="listitem">
+          :to="`/projects/${p.firestoreId}`" :aria-label="ariaLabelFor(p)" role="listitem">
 
           <div class="relative w-full aspect-[1200/800] overflow-hidden bg-[var(--color-surface)] m-0">
             <img :src="p.img" :alt="altFor(p)" class="w-full h-full object-cover transition-transform duration-200" />
-            <span class="cat-badge" :style="badgeStyle(p.category)">
+            <span class="cat-badge" :style="badgeStyle(p.rawCategory)">
               {{ p.category || 'Other' }}
             </span>
           </div>
 
           <h3 class="mt-4">{{ p.title }}</h3>
           <ul v-if="p.tag?.length" class="list-none flex flex-wrap justify-center mt-2 gap-2 p-0"
-            aria-label="Tag di progetto">
-            <li v-for="tag in p.tag" :key="tag" class="tag pill" :style="badgeStyle(p.category)">
+            :aria-label="isEnglish ? 'Project tags' : 'Tag di progetto'">
+            <li v-for="tag in p.tag" :key="tag" class="tag pill" :style="badgeStyle(p.rawCategory)">
               {{ tag }}
             </li>
           </ul>
@@ -329,7 +365,7 @@ body.dark-mode .hero-image-container {
 }
 
 .sr-only {
-  position: absolute;
+  position: absolute !important;
   width: 1px;
   height: 1px;
   padding: 0;

@@ -1,48 +1,87 @@
 <script setup>
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useLanguage } from '@/composables/useLanguage'
+
+const { currentLang } = useLanguage()
+
+const UI_TEXT = {
+  it: {
+    nav: {
+      home: 'Home',
+      about: 'About',
+      publications: 'Pubblicazioni',
+      projects: 'Progetti',
+      illustrations: 'Illustrazioni',
+      contacts: 'Contatti'
+    },
+    socialAria: 'Canali Social',
+    emailAria: 'Invia un email a Anna Cazzanelli - Apre il client di posta',
+    instagramAria: 'Profilo Instagram di Anna Cazzanelli - Si apre in una nuova scheda',
+    linkedinAria: 'Profilo LinkedIn di Anna Cazzanelli - Si apre in una nuova scheda',
+    behanceAria: 'Profilo Behance di Anna Cazzanelli - Si apre in una nuova scheda',
+    rights: '© 2026 Anna Cazzanelli — Tutti i diritti riservati'
+  },
+  en: {
+    nav: {
+      home: 'Home',
+      about: 'About',
+      publications: 'Publications',
+      projects: 'Projects',
+      illustrations: 'Illustrations',
+      contacts: 'Contact'
+    },
+    socialAria: 'Social Media Channels',
+    emailAria: 'Send an email to Anna Cazzanelli - Opens email client',
+    instagramAria: 'Anna Cazzanelli Instagram profile - Opens in a new tab',
+    linkedinAria: 'Anna Cazzanelli LinkedIn profile - Opens in a new tab',
+    behanceAria: 'Anna Cazzanelli Behance profile - Opens in a new tab',
+    rights: '© 2026 Anna Cazzanelli — All rights reserved'
+  }
+}
+
+const t = computed(() => {
+  const lang = String(currentLang?.value || currentLang || 'it').toLowerCase()
+  return lang.startsWith('en') ? UI_TEXT.en : UI_TEXT.it
+})
 </script>
 
 <template>
-  <div class="site-footer text-text border-t-2" :style="{ borderColor: 'var(--color-accent)' }">
+  <footer class="site-footer text-text border-t-2" :style="{ borderColor: 'var(--color-accent)' }">
     <div class="mx-auto max-w-[1280px] px-desktop md:py-6 py-5 flex flex-col gap-3 md:gap-4">
       <div class="flex flex-col md:flex-row items-center justify-between gap-4">
 
         <!-- Navigazione interna -->
-        <div
-          class="flex flex-wrap justify-center md:justify-start items-center gap-4 md:gap-6 text-[13px] sm:text-[14px] md:text-base">
-          <RouterLink to="/" class="footer-link hover:text-hover">Home</RouterLink>
-
-          <RouterLink to="/about" class="footer-link hover:text-hover">About</RouterLink>
-
-          <RouterLink to="/publications" class="footer-link hover:text-hover">Pubblicazioni</RouterLink>
-
-          <RouterLink to="/projects" class="footer-link hover:text-hover">Progetti</RouterLink>
-
-          <RouterLink to="/illustrations" class="footer-link hover:text-hover">Illustrazioni</RouterLink>
-
-          <RouterLink to="/contacts" class="footer-link hover:text-hover">Contatti</RouterLink>
-        </div>
+        <nav
+          class="flex flex-wrap justify-center md:justify-start items-center gap-4 md:gap-6 text-[13px] sm:text-[14px] md:text-base"
+          :aria-label="t.nav.home">
+          <RouterLink to="/" class="footer-link hover:text-hover">{{ t.nav.home }}</RouterLink>
+          <RouterLink to="/about" class="footer-link hover:text-hover">{{ t.nav.about }}</RouterLink>
+          <RouterLink to="/publications" class="footer-link hover:text-hover">{{ t.nav.publications }}</RouterLink>
+          <RouterLink to="/projects" class="footer-link hover:text-hover">{{ t.nav.projects }}</RouterLink>
+          <RouterLink to="/illustrations" class="footer-link hover:text-hover">{{ t.nav.illustrations }}</RouterLink>
+          <RouterLink to="/contacts" class="footer-link hover:text-hover">{{ t.nav.contacts }}</RouterLink>
+        </nav>
 
         <!-- Social -->
         <div class="flex items-center gap-4 md:gap-4 justify-center md:justify-end w-full md:w-auto"
-          aria-label="Canali Social">
-          <a href="mailto:anna.cazzanelli1@gmail.com" class="footer-link"
-            aria-label="Invia un email a Anna Cazzanelli - Apre il client di posta">
+          :aria-label="t.socialAria">
+          <a href="mailto:anna.cazzanelli1@gmail.com" class="footer-link" :aria-label="t.emailAria">
             <img src="/icone/icon-email.svg" alt="Email" class="social-icn" />
           </a>
 
           <a href="https://www.instagram.com/annaredpan/" target="_blank" rel="noopener" class="footer-link"
-            aria-label="Profilo Instagram di Anna Cazzanelli - Si apre in una nuova scheda">
+            :aria-label="t.instagramAria">
             <img src="/icone/icon-instagram.svg" alt="Instagram" class="social-icn" />
           </a>
 
           <a href="https://www.linkedin.com/in/anna-cazzanelli-a193a6276/" target="_blank" rel="noopener"
-            class="footer-link" aria-label="Profilo LinkedIn di Anna Cazzanelli - Si apre in una nuova scheda">
+            class="footer-link" :aria-label="t.linkedinAria">
             <img src="/icone/icon-linkedin.svg" alt="LinkedIn" class="social-icn" />
           </a>
 
           <a href="https://www.behance.net/cazzanellianna" target="_blank" rel="noopener" class="footer-link"
-            aria-label="Profilo Behance di Anna Cazzanelli - Si apre in una nuova scheda">
+            :aria-label="t.behanceAria">
             <img src="/icone/icon-behance.svg" alt="Behance" class="social-icn" />
           </a>
         </div>
@@ -51,10 +90,10 @@ import { RouterLink } from 'vue-router'
       <!-- SEZIONE COPYRIGHT & LINK LEGALI -->
       <div class="text-center flex flex-col gap-1 md:gap-2">
         <p class="copyright">
-          © 2026 Anna Cazzanelli — Tutti i diritti riservati
+          {{ t.rights }}
         </p>
 
-        <!-- Link Iubenda inseriti qui -->
+        <!-- Link Iubenda -->
         <div class="legal-links text-[12px] sm:text-[13px] md:text-[14px]">
           <a href="https://www.iubenda.com/privacy-policy/22335353" class="footer-link iubenda-noiframe iubenda-embed"
             title="Privacy Policy">Privacy Policy</a>
@@ -65,7 +104,7 @@ import { RouterLink } from 'vue-router'
       </div>
 
     </div>
-  </div>
+  </footer>
 </template>
 
 <style scoped>
@@ -108,12 +147,11 @@ import { RouterLink } from 'vue-router'
   font-size: 14px;
   line-height: 1.5;
   opacity: 0.6;
-  
 }
 
-/* Stile per distanziare e sfumare leggermente i link legali rispetto al copyright principale */
+/* Stile link legali */
 .legal-links {
-  opacity:1;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 

@@ -2,13 +2,29 @@
 /* ==========================================================================
    Import e configurazione
    ========================================================================== */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { db } from '@/firebase/config'
 import { collection, query, getDocs, orderBy } from 'firebase/firestore'
 import { RouterLink } from 'vue-router'
+import { useLanguage } from '@/composables/useLanguage'
 
-const publications = ref([])
+const { currentLang } = useLanguage()
+
+const rawPublications = ref([])
 const loading = ref(true)
+
+/* ==========================================================================
+   Dati Localizzati Reattivi (Titoli, Editori e Date ITA/ENG)
+   ========================================================================== */
+const localizedPublications = computed(() => {
+  const isEn = currentLang.value === 'en'
+  return rawPublications.value.map(pub => ({
+    ...pub,
+    title: (isEn && pub.title_en ? pub.title_en : pub.title) || (isEn ? 'Untitled' : 'Senza titolo'),
+    publisher: (isEn && pub.publisher_en ? pub.publisher_en : pub.publisher) || '',
+    date: (isEn && pub.date_en ? pub.date_en : pub.date) || ''
+  }))
+})
 
 async function fetchPublications() {
   loading.value = true
@@ -18,7 +34,7 @@ async function fetchPublications() {
       orderBy('priority', 'asc')
     )
     const snap = await getDocs(q)
-    publications.value = snap.docs.map(doc => ({
+    rawPublications.value = snap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }))
@@ -36,51 +52,58 @@ onMounted(() => {
 </script>
 
 <template>
-  <main id="main-content" tabindex="-1"  class="page-content">
+  <main id="main-content" tabindex="-1" class="page-content">
     <div class="publications-page-wrapper flex flex-col items-center py-4">
 
       <section class="hero-container relative w-full overflow-hidden" role="region" aria-labelledby="page-title">
         <div class="hero-image-container absolute inset-0" aria-hidden="true"></div>
         <div
           class="header-content-wrapper absolute inset-x-0 top-1/2 -translate-y-1/2 text-center w-full px-[var(--margin-desktop)]">
-          <h1 id="page-title">Pubblicazioni</h1>
+          <h1 id="page-title">{{ currentLang === 'en' ? 'Publications' : 'Pubblicazioni' }}</h1>
         </div>
       </section>
 
       <section class="content-wrapper w-full max-w-[1200px] px-[var(--margin-desktop)] mt-12 mb-20" role="region"
         aria-labelledby="content-title">
 
-        <h2 id="content-title" class="sr-only">Elenco delle pubblicazioni editoriali</h2>
+        <h2 id="content-title" class="sr-only">
+          {{ currentLang === 'en' ? 'List of editorial publications' : 'Elenco delle pubblicazioni editoriali' }}
+        </h2>
 
         <div v-if="loading" class="text-center py-20 opacity-50" role="status" aria-live="polite">
-          Caricamento...
+          {{ currentLang === 'en' ? 'Loading…' : 'Caricamento...' }}
         </div>
 
-        <div v-else-if="publications.length"
-          class="pub-grid grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16 justify-items-center" role="list"
->
-          <RouterLink v-for="pub in publications" :key="pub.id"
-          :to="`/publications/${pub.id}`"
+        <div v-else-if="localizedPublications.length"
+          class="pub-grid grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16 justify-items-center" role="list">
+          <RouterLink v-for="pub in localizedPublications" :key="pub.id" :to="`/publications/${pub.id}`"
             class="pub-card group w-full max-w-[380px] no-underline block"
-            :aria-label="`Leggi i dettagli di: ${pub.title || 'Pubblicazione'}`" role="listitem">
+            :aria-label="`${currentLang === 'en' ? 'Read details of' : 'Leggi i dettagli di'}: ${pub.title || (currentLang === 'en' ? 'Publication' : 'Pubblicazione')}`"
+            role="listitem">
 
             <div
               class="cover-container overflow-hidden mb-6 shadow-md transition-transform duration-500 group-hover:scale-[1.01]">
-              <img :src="pub.main_image" :alt="pub.title ? `Copertina di: ${pub.title}` : 'Copertina pubblicazione'"
+              <img :src="pub.main_image"
+                :alt="pub.title ? `${currentLang === 'en' ? 'Cover of' : 'Copertina di'}: ${pub.title}` : (currentLang === 'en' ? 'Publication cover' : 'Copertina pubblicazione')"
                 class="w-full h-full object-cover aspect-[569/800]" />
             </div>
 
             <div class="text-center px-4">
-              <h3 class="mt-4">{{ pub.title || 'Senza titolo' }}</h3>
+              <h3 class="mt-4">
+                {{ pub.title }}
+              </h3>
               <p class="pub-info">
-                <template v-if="pub.publisher">{{ pub.publisher }} &middot; </template>{{ pub.date }}
+                <template v-if="pub.publisher">
+                  {{ pub.publisher }} &middot;
+                </template>
+                {{ pub.date }}
               </p>
             </div>
           </RouterLink>
         </div>
 
         <div v-else class="text-center py-20 opacity-40" role="alert">
-          Nessuna pubblicazione trovata.
+          {{ currentLang === 'en' ? 'No publications found.' : 'Nessuna pubblicazione trovata.' }}
         </div>
       </section>
 

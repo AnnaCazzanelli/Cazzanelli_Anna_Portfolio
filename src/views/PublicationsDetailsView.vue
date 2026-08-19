@@ -6,18 +6,41 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { db } from '@/firebase/config'
 import { doc, getDoc } from 'firebase/firestore'
+import { useLanguage } from '@/composables/useLanguage'
 
 /* ==========================================================================
-   Stato view
+   Stato view e Lingua
    ========================================================================= */
+const { currentLang } = useLanguage()
 const route = useRoute()
-const pub = ref(null)
+const rawPub = ref(null)
 const loading = ref(true)
 const notFound = ref(false)
 const activeIndex = ref(0)
 
 /* ==========================================================================
-   Helpers di Pulizia (Risolvono gli errori di battitura nel DB)
+   Dati Localizzati Reattivi (ITA / ENG con gestione refusi Firebase)
+   ========================================================================= */
+const isEnglish = computed(() => currentLang.value === 'en')
+
+const pub = computed(() => {
+  if (!rawPub.value) return null
+  const d = rawPub.value
+  const en = isEnglish.value
+
+  return {
+    ...d,
+    title: en ? (d.title_en || d.title) : d.title,
+    date: en ? (d.date_en || d.date) : d.date,
+    // Gestisce sia description_en che il refuso descrition_en presente su Firebase
+    description: en ? (d.description_en || d.descrition_en || d.description) : d.description,
+    publisher: en ? (d.publisher_en || d.publisher) : d.publisher,
+    author: en ? (d.author_en || d.author) : d.author
+  }
+})
+
+/* ==========================================================================
+   Helpers di Pulizia
    ========================================================================= */
 const cleanPath = (path) => {
   if (!path || typeof path !== 'string') return ''
@@ -37,16 +60,17 @@ const normKey = (u) => {
 window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 
 /* ==========================================================================
-   Normalizzazione Gallery (Prende SOLO la alta risoluzione dalla gallery)
+   Normalizzazione Gallery
    ========================================================================= */
 const images = computed(() => {
-  if (!pub.value) return []
+  if (!rawPub.value) return []
   const out = []
   const addedKeys = new Set()
+  const currentTitle = pub.value?.title || 'Pubblicazione'
 
-  if (Array.isArray(pub.value.gallery)) {
-    pub.value.gallery.forEach((item) => {
-      let src = ""
+  if (Array.isArray(rawPub.value.gallery)) {
+    rawPub.value.gallery.forEach((item) => {
+      let src = ''
       if (typeof item === 'string') {
         src = cleanPath(item)
       } else if (item && typeof item === 'object') {
@@ -56,7 +80,10 @@ const images = computed(() => {
       if (src) {
         const currentKey = normKey(src)
         if (!addedKeys.has(currentKey)) {
-          out.push({ src, alt: `${pub.value.title} – immagine` })
+          out.push({
+            src,
+            alt: `${currentTitle} – ${isEnglish.value ? 'image' : 'immagine'}`
+          })
           addedKeys.add(currentKey)
         }
       }
@@ -93,9 +120,9 @@ async function fetchPublication() {
   try {
     const snap = await getDoc(doc(db, 'publications', id))
     if (!snap.exists()) { notFound.value = true; return }
-    pub.value = { id: snap.id, ...snap.data() }
+    rawPub.value = { id: snap.id, ...snap.data() }
   } catch (e) {
-    console.error("Errore fetch:", e)
+    console.error('Errore fetch:', e)
     notFound.value = true
   } finally {
     loading.value = false
@@ -110,74 +137,86 @@ watch(() => route.params.id, fetchPublication)
   <main id="main-content" tabindex="-1" class="page bg-surface text-text">
 
     <div v-if="loading" class="loading py-40 text-center opacity-80 uppercase tracking-widest" role="status"
-      aria-live="polite">Caricamento…</div>
+      aria-live="polite">
+      {{ isEnglish ? 'Loading…' : 'Caricamento…' }}
+    </div>
 
     <div v-else-if="notFound" class="notfound py-40 text-center opacity-80" role="alert">
-      <p class="mb-4">Pubblicazione non trovata.</p>
-      <RouterLink to="/publications" class="text-accent underline">Torna alla lista</RouterLink>
+      <p class="mb-4">{{ isEnglish ? 'Publication not found.' : 'Pubblicazione non trovata.' }}</p>
+      <RouterLink to="/publications" class="text-accent underline">
+        {{ isEnglish ? 'Back to list' : 'Torna alla lista' }}
+      </RouterLink>
     </div>
 
     <div v-else-if="pub" class="container max-w-[1200px] mx-auto relative">
 
       <RouterLink to="/publications"
         class="back-btn absolute -top-[60px] left-0 w-12 h-12 flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10"
-        aria-label="Torna alla lista delle pubblicazioni">
+        :aria-label="isEnglish ? 'Back to publications list' : 'Torna alla lista delle pubblicazioni'"
+        :title="isEnglish ? 'Back to publications list' : 'Torna alla lista delle pubblicazioni'">
         <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6" />
-        <span class="sr-only">Torna alla lista delle pubblicazioni</span>
+        <span class="sr-only">{{ isEnglish ? 'Back to publications list' : 'Torna alla lista delle pubblicazioni'
+          }}</span>
       </RouterLink>
 
       <h1 class="title text-accent text-center">{{ pub.title }}</h1>
 
       <section class="viewer grid grid-cols-[48px_1fr_48px] items-center gap-6 mb-14"
-        aria-label="Visualizzatore elementi della pubblicazione">
+        :aria-label="isEnglish ? 'Publication items viewer' : 'Visualizzatore elementi della pubblicazione'">
 
         <button
           class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
-          :disabled="activeIndex === 0" @click="prev" aria-label="Elemento precedente" title="Elemento precedente">
+          :disabled="activeIndex === 0" @click="prev" :aria-label="isEnglish ? 'Previous item' : 'Elemento precedente'"
+          :title="isEnglish ? 'Previous item' : 'Elemento precedente'">
           <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="w-6 h-6 block pointer-events-none" />
         </button>
 
         <div class="stage bg-surface grid place-items-center overflow-hidden">
           <img v-if="images.length > 0" :src="images[activeIndex].src" :alt="images[activeIndex].alt"
             class="stage-img block shadow-2xl object-contain" />
-          <div v-else class="opacity-20 italic" role="status">Contenuto multimediale non disponibile</div>
+          <div v-else class="opacity-20 italic" role="status">
+            {{ isEnglish ? 'Media content not available' : 'Contenuto multimediale non disponibile' }}
+          </div>
         </div>
 
         <button
           class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent"
-          :disabled="activeIndex === images.length - 1" @click="next" aria-label="Elemento successivo"
-          title="Elemento successivo">
+          :disabled="activeIndex === images.length - 1" @click="next"
+          :aria-label="isEnglish ? 'Next item' : 'Elemento successivo'"
+          :title="isEnglish ? 'Next item' : 'Elemento successivo'">
           <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
       </section>
 
       <section v-if="thumbs.length > 1" class="thumbs flex gap-4 overflow-x-auto scroll-smooth no-scrollbar mb-14 px-20"
-        role="list" aria-label="Miniature della pubblicazione">
+        role="list" :aria-label="isEnglish ? 'Publication thumbnails' : 'Miniature della pubblicazione'">
         <button v-for="(t, i) in thumbs" :key="t.src + i" class="thumb flex-shrink-0"
-          :class="{ 'active': i === activeIndex }" @click="setActive(i)" :aria-label="'Mostra elemento ' + (i + 1)"
-          :title="'Mostra elemento ' + (i + 1)" :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
+          :class="{ 'active': i === activeIndex }" @click="setActive(i)"
+          :aria-label="isEnglish ? 'Show item ' + (i + 1) : 'Mostra elemento ' + (i + 1)"
+          :title="isEnglish ? 'Show item ' + (i + 1) : 'Mostra elemento ' + (i + 1)"
+          :aria-current="i === activeIndex ? 'true' : 'false'" role="listitem">
           <img :src="t.src" :alt="t.alt" class="w-full h-full object-cover pointer-events-none" />
         </button>
       </section>
 
       <section
         class="meta grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-12 pt-10 border-t border-black/5 dark:border-white/5"
-        aria-label="Scheda dettagli pubblicazione">
+        :aria-label="isEnglish ? 'Publication details specification' : 'Scheda dettagli pubblicazione'">
         <div class="col">
 
           <dl class="meta-list">
-            <dt v-if="pub.date" class="meta-label">Anno</dt>
+            <dt v-if="pub.date" class="meta-label">{{ isEnglish ? 'Year' : 'Anno' }}</dt>
             <dd v-if="pub.date">
               <p class="desc">{{ pub.date }}</p>
             </dd>
 
-            <dt v-if="pub.publisher" class="meta-label">Editore</dt>
+            <dt v-if="pub.publisher" class="meta-label">{{ isEnglish ? 'Publisher' : 'Editore' }}</dt>
             <dd v-if="pub.publisher">
               <p class="desc">{{ pub.publisher }}</p>
             </dd>
 
-            <dt v-if="pub.author" class="meta-label">Autore</dt>
+            <dt v-if="pub.author" class="meta-label">{{ isEnglish ? 'Author' : 'Autore' }}</dt>
             <dd v-if="pub.author">
               <p class="desc">{{ pub.author }}</p>
             </dd>
@@ -185,7 +224,7 @@ watch(() => route.params.id, fetchPublication)
         </div>
 
         <div class="col">
-          <h2 class="meta-label">Descrizione</h2>
+          <h2 class="meta-label">{{ isEnglish ? 'Description' : 'Descrizione' }}</h2>
           <div class="desc leading-relaxed" v-html="pub.description"></div>
         </div>
       </section>
@@ -211,7 +250,6 @@ watch(() => route.params.id, fetchPublication)
   padding: 48px var(--margin-desktop) 112px;
 }
 
-/* Titolo sincronizzato allo stile ciccio di Project Details */
 .title {
   font-size: clamp(2rem, 4.2vw, 4.6rem);
   line-height: 1.1;
@@ -285,7 +323,6 @@ watch(() => route.params.id, fetchPublication)
   transition: none !important;
 }
 
-/* UNIFICATO: Regola lo stile di tutti i testi di descrizione e dei valori tecnici a sinistra */
 .desc,
 .meta-list dd p {
   font-size: clamp(0.93rem, 1.05vw, 1.12rem);
@@ -298,7 +335,6 @@ watch(() => route.params.id, fetchPublication)
   padding: 0;
 }
 
-/* BLINDATO CON LE TUE SPECIFICHE: Sincronizzato con l'aspetto di Illustration e Project Detail */
 .meta-label {
   font-size: clamp(1.25rem, 1.9vw, 1.5rem);
   margin: 0 0 12px;

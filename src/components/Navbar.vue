@@ -1,10 +1,12 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import { ref, watch, onMounted } from 'vue'
+import { useLanguage } from '@/composables/useLanguage'
 
-/* Stato UI */
+/* Stato UI e Lingua */
 const isMobileMenuOpen = ref(false)
 const isDarkMode = ref(false)
+const { currentLang, toggleLanguage } = useLanguage()
 
 /* Menu mobile */
 const toggleMobileMenu = () => {
@@ -54,14 +56,21 @@ watch(
       <nav class="desktop-nav" aria-label="Navigazione principale">
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/publications">Pubblicazioni</RouterLink>
-        <RouterLink to="/projects">Progetti</RouterLink>
-        <RouterLink to="/illustrations">Illustrazioni</RouterLink>
-        <RouterLink to="/contacts">Contatti</RouterLink>
+        <RouterLink to="/publications">{{ currentLang === 'en' ? 'Publications' : 'Pubblicazioni' }}</RouterLink>
+        <RouterLink to="/projects">{{ currentLang === 'en' ? 'Projects' : 'Progetti' }}</RouterLink>
+        <RouterLink to="/illustrations">{{ currentLang === 'en' ? 'Illustrations' : 'Illustrazioni' }}</RouterLink>
+        <RouterLink to="/contacts">{{ currentLang === 'en' ? 'Contacts' : 'Contatti' }}</RouterLink>
       </nav>
 
       <!-- Area Controlli (Desktop & Base Mobile) -->
       <div class="controls-wrapper">
+        <!-- Toggle Lingua Desktop -->
+        <button class="lang-toggle hidden-mobile" type="button" @click="toggleLanguage" aria-label="Cambia lingua">
+          <span :class="{ 'active-lang': currentLang === 'it' }">ITA</span>
+          <span class="lang-sep">/</span>
+          <span :class="{ 'active-lang': currentLang === 'en' }">ENG</span>
+        </button>
+
         <!-- Toggle Tema con SVG Mascherato Dinamico -->
         <button class="theme-toggle" type="button" @click="toggleDarkMode" aria-label="Cambia tema">
           <span v-if="isDarkMode" class="mode-icn icon-moon" aria-label="Dark Mode"></span>
@@ -85,11 +94,22 @@ watch(
         <div class="mobile-links flex flex-col items-center">
           <RouterLink to="/" @click="closeMobileMenu">Home</RouterLink>
           <RouterLink to="/about" @click="closeMobileMenu">About</RouterLink>
-          <RouterLink to="/publications" @click="closeMobileMenu">Pubblicazioni</RouterLink>
-          <RouterLink to="/projects" @click="closeMobileMenu">Progetti</RouterLink>
-          <RouterLink to="/illustrations" @click="closeMobileMenu">Illustrazioni</RouterLink>
-          <RouterLink to="/contacts" @click="closeMobileMenu">Contatti</RouterLink>
+          <RouterLink to="/publications" @click="closeMobileMenu">{{ currentLang === 'en' ? 'Publications' :
+            'Pubblicazioni' }}</RouterLink>
+          <RouterLink to="/projects" @click="closeMobileMenu">{{ currentLang === 'en' ? 'Projects' : 'Progetti' }}
+          </RouterLink>
+          <RouterLink to="/illustrations" @click="closeMobileMenu">{{ currentLang === 'en' ? 'Illustrations' :
+            'Illustrazioni' }}</RouterLink>
+          <RouterLink to="/contacts" @click="closeMobileMenu">{{ currentLang === 'en' ? 'Contacts' : 'Contatti' }}
+          </RouterLink>
         </div>
+
+        <!-- Toggle Lingua dentro il Menu Mobile -->
+        <button class="lang-toggle mobile-lang-btn" type="button" @click="toggleLanguage" aria-label="Cambia lingua">
+          <span :class="{ 'active-lang': currentLang === 'it' }">ITA</span>
+          <span class="lang-sep">/</span>
+          <span :class="{ 'active-lang': currentLang === 'en' }">ENG</span>
+        </button>
       </nav>
 
     </div>
@@ -106,57 +126,101 @@ watch(
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  padding: 20px var(--margin-desktop);
-  gap: 24px;
+  padding: 16px var(--margin-desktop);
+  gap: clamp(12px, 2vw, 24px);
 }
 
 /* Nav Desktop */
 .desktop-nav {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: clamp(14px, 1.8vw, 24px);
 }
 
 .desktop-nav a {
-  font-size: 16pt;
-  line-height: 19pt;
+  font-size: clamp(13pt, 1.2vw, 16pt);
+  line-height: 1.2;
   font-family: 'Forma DJR Micro', 'Lato', sans-serif;
   font-weight: 700;
   text-decoration: none;
   color: var(--color-text);
   transition: color 0.2s ease;
+  white-space: nowrap;
 }
 
 .desktop-nav a:hover {
   color: var(--color-hover);
 }
 
-/* Area utility */
+/* Gruppo Utility (Linea separatrice + Lingua + Tema) */
 .controls-wrapper {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: clamp(10px, 1.2vw, 16px);
+  padding-left: clamp(12px, 1.5vw, 20px);
+  height: 20px;
+  border-left: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
 }
 
-/* --- TOGGLE TEMA (SVG dinamici mascherati) --- */
+/* --- TOGGLE LINGUA (Scalato, Discreto e Dinamico) --- */
+.lang-toggle {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-family: 'Forma DJR Micro', 'Lato', sans-serif;
+  font-size: clamp(0.75rem, 0.9vw, 0.95rem);
+  font-weight: 600;
+  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  line-height: 1;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.lang-toggle span {
+  color: var(--color-text);
+  opacity: 0.35;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.lang-toggle span.active-lang {
+  opacity: 1;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.lang-toggle:hover span:not(.active-lang) {
+  opacity: 0.75;
+}
+
+.lang-sep {
+  opacity: 0.25 !important;
+  margin: 0 1px;
+}
+
+/* --- TOGGLE TEMA --- */
 .theme-toggle {
   background: none;
   border: none;
   cursor: pointer;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .mode-icn {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   display: block;
   background-color: var(--color-accent);
-  /* Prende automaticamente il colore d'accento */
   transition: background-color 0.2s ease, transform 0.2s ease;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
@@ -178,7 +242,6 @@ watch(
 
 .theme-toggle:hover .mode-icn {
   background-color: var(--color-hover);
-  /* Cambia colore al passaggio del mouse */
   transform: translateY(-1px);
 }
 
@@ -228,8 +291,17 @@ watch(
 
 /* Mobile Responsive */
 @media (max-width: 900px) {
-  .desktop-nav {
+
+  .desktop-nav,
+  .hidden-mobile {
     display: none !important;
+  }
+
+  .controls-wrapper {
+    border-left: none;
+    padding-left: 0;
+    gap: 12px;
+    height: auto;
   }
 
   .menu-icon {
@@ -264,6 +336,11 @@ watch(
     text-decoration: none;
     color: var(--color-text);
     margin: 12px 0;
+  }
+
+  .mobile-lang-btn {
+    font-size: 14pt;
+    margin-top: 10px;
   }
 }
 </style>

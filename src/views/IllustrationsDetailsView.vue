@@ -1,10 +1,17 @@
 <script setup>
+/* ==========================================================================
+   Import e Stato
+   ========================================================================== */
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { db } from '@/firebase/config'
 import { doc, getDoc, collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { useLanguage } from '@/composables/useLanguage'
 
-/* Routing */
+/* Lingua e Routing */
+const { currentLang } = useLanguage()
+const isEnglish = computed(() => currentLang.value === 'en')
+
 const route = useRoute()
 const router = useRouter()
 
@@ -42,7 +49,7 @@ async function fetchIllustration() {
       notFound.value = true
       return
     }
-    illustration.value = { id: snap.id, ...snap.data() }
+    illustration.value = { ...snap.data(), id: snap.id }
   } catch (e) {
     console.error('Errore nel recupero illustrazione:', e)
     notFound.value = true
@@ -55,31 +62,46 @@ async function fetchIllustration() {
 
 async function fetchOrderedIdsOnce() {
   if (orderedIds.value.length) return
-  const q = query(collection(db, 'illustrations'), orderBy('order', 'asc'))
-  const snap = await getDocs(q)
-  orderedIds.value = snap.docs.map(d => d.id)
+  try {
+    const q = query(collection(db, 'illustrations'), orderBy('order', 'asc'))
+    const snap = await getDocs(q)
+    orderedIds.value = snap.docs.map(d => d.id)
+  } catch (e) {
+    console.error('Errore recupero lista ordinata:', e)
+  }
 }
 
 /* Palette categorie e stile pill */
 const CATEGORY_COLORS = {
   'Commissione': { bg: '#ffe3e9', bd: '#ffa8c0', fg: '#7a1f3a' },
   'Progetto Personale': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
-  'Pubblicazione': { bg: '#e5dbff', bd: '#b197fc', fg: '#3b2f7a' },
+  'Pubblicazioni': { bg: '#e5dbff', bd: '#b197fc', fg: '#3b2f7a' },
   'Challenge Artistica': { bg: '#f3e8ff', bd: '#d0b3ff', fg: '#4a1d7a' },
   Other: { bg: '#f1f3f5', bd: '#dee2e6', fg: '#212529' }
 }
 
-const currentCategory = computed(() => {
-  const raw = (illustration.value?.category || '').trim()
-  if (/commissione/i.test(raw)) return 'Commissione'
-  if (/personale/i.test(raw)) return 'Progetto Personale'
-  if (/pubblicazione/i.test(raw)) return 'Pubblicazione'
-  if (/challenge/i.test(raw)) return 'Challenge Artistica'
-  return raw in CATEGORY_COLORS ? raw : 'Other'
+const rawCategory = computed(() => {
+  const raw = (illustration.value?.category || '').trim().toLowerCase()
+  if (raw.includes('commission')) return 'Commissione'
+  if (raw.includes('person')) return 'Progetto Personale'
+  if (raw.includes('pubbli') || raw.includes('publicat')) return 'Pubblicazioni'
+  if (raw.includes('challenge')) return 'Challenge Artistica'
+  return 'Other'
+})
+
+const displayCategory = computed(() => {
+  if (!isEnglish.value) return rawCategory.value
+  switch (rawCategory.value) {
+    case 'Commissione': return 'Commissioned Work'
+    case 'Pubblicazioni': return 'Publications'
+    case 'Challenge Artistica': return 'Art Challenge'
+    case 'Progetto Personale': return 'Personal Project'
+    default: return 'Other'
+  }
 })
 
 const pillStyle = computed(() => {
-  const c = CATEGORY_COLORS[currentCategory.value] || CATEGORY_COLORS.Other
+  const c = CATEGORY_COLORS[rawCategory.value] || CATEGORY_COLORS.Other
   return {
     background: c.bg,
     border: `1px solid ${c.bd}`,
@@ -87,10 +109,33 @@ const pillStyle = computed(() => {
   }
 })
 
+/* Campi bilingue */
+const displayTitle = computed(() => {
+  if (isEnglish.value) return illustration.value?.title_en || illustration.value?.title || ''
+  return illustration.value?.title || ''
+})
+
+const displayDescription = computed(() => {
+  if (isEnglish.value) return illustration.value?.description_en || illustration.value?.description || ''
+  return illustration.value?.description || ''
+})
+
+const displayTools = computed(() => {
+  if (isEnglish.value) return illustration.value?.tools_en || illustration.value?.tools || ''
+  return illustration.value?.tools || ''
+})
+
+const displayTags = computed(() => {
+  if (isEnglish.value && Array.isArray(illustration.value?.tag_en) && illustration.value.tag_en.length > 0) {
+    return illustration.value.tag_en
+  }
+  return Array.isArray(illustration.value?.tag) ? illustration.value.tag : []
+})
+
 const altText = computed(() =>
-  illustration.value?.title
-    ? `Illustrazione: ${illustration.value.title}`
-    : 'Illustrazione'
+  displayTitle.value
+    ? (isEnglish.value ? `Illustration: ${displayTitle.value}` : `Illustrazione: ${displayTitle.value}`)
+    : (isEnglish.value ? 'Illustration' : 'Illustrazione')
 )
 
 /* Navigazione prev/next */
@@ -100,12 +145,14 @@ function goPrev() {
     router.push({ name: 'illustration-details', params: { id: target } })
   }
 }
+
 function goNext() {
   if (currentIndex.value >= 0 && currentIndex.value < orderedIds.value.length - 1) {
     const target = orderedIds.value[currentIndex.value + 1]
     router.push({ name: 'illustration-details', params: { id: target } })
   }
 }
+
 function onKeydown(e) {
   if (e.key === 'ArrowLeft') { e.preventDefault(); goPrev() }
   if (e.key === 'ArrowRight') { e.preventDefault(); goNext() }
@@ -114,6 +161,7 @@ function onKeydown(e) {
 onMounted(async () => {
   await Promise.all([fetchOrderedIdsOnce(), fetchIllustration()])
 })
+
 watch(() => route.params.id, fetchIllustration)
 </script>
 
@@ -121,13 +169,13 @@ watch(() => route.params.id, fetchIllustration)
   <main id="main-content" tabindex="-1" class="page bg-surface text-text">
 
     <div v-if="loading" class="loading text-center opacity-80 py-40" role="status" aria-live="polite">
-      Caricamento illustrazione…
+      {{ isEnglish ? 'Loading illustration…' : 'Caricamento illustrazione…' }}
     </div>
 
     <div v-else-if="notFound" class="notfound text-center opacity-80 py-40" role="alert">
-      <p>Illustrazione non trovata.</p>
-      <RouterLink to="/illustrations" class="back-link text-accent no-underline">
-        Torna alla sezione illustrazioni
+      <p class="mb-4 text-xl">{{ isEnglish ? 'Illustration not found.' : 'Illustrazione non trovata.' }}</p>
+      <RouterLink to="/illustrations" class="back-link text-accent no-underline font-semibold hover:underline">
+        {{ isEnglish ? 'Back to illustrations' : 'Torna alla sezione illustrazioni' }}
       </RouterLink>
     </div>
 
@@ -135,24 +183,28 @@ watch(() => route.params.id, fetchIllustration)
 
       <RouterLink to="/illustrations" class="back-btn absolute -top-[60px] left-0 w-12 h-12 bg-transparent inline-flex items-center justify-center no-underline transition
                hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
-               focus-visible:outline  focus-visible:outline-[var(--color-accent)]"
-        aria-label="Torna alle illustrazioni" title="Torna alle illustrazioni">
+               focus-visible:outline focus-visible:outline-[var(--color-accent)]"
+        :aria-label="isEnglish ? 'Back to illustrations' : 'Torna alle illustrazioni'"
+        :title="isEnglish ? 'Back to illustrations' : 'Torna alle illustrazioni'">
         <img src="/icone/icon-arrowsx.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block" />
-        <span class="sr-only">Torna alle illustrazioni</span>
+        <span class="sr-only">{{ isEnglish ? 'Back to illustrations' : 'Torna alle illustrazioni' }}</span>
       </RouterLink>
 
       <h1 class="title text-accent text-center">
-        {{ illustration.title }}
+        {{ displayTitle }}
       </h1>
 
-      <section class="viewer grid items-center gap-6 mb-14" aria-label="Visualizzatore illustrazione" tabindex="0"
+      <section class="viewer grid items-center gap-6 mb-14"
+        :aria-label="isEnglish ? 'Illustration viewer' : 'Visualizzatore illustrazione'" tabindex="0"
         @keydown="onKeydown">
-        <button class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
+        <button
+          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
                  hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
-                 focus-visible:outline  focus-visible:outline-[var(--color-accent)]
-                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent" type="button"
-          :disabled="currentIndex <= 0" aria-label="Illustrazione precedente" title="Illustrazione precedente"
-          @click="goPrev">
+                 focus-visible:outline focus-visible:outline-[var(--color-accent)]
+                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent cursor-pointer disabled:cursor-not-allowed"
+          type="button" :disabled="currentIndex <= 0"
+          :aria-label="isEnglish ? 'Previous illustration' : 'Illustrazione precedente'"
+          :title="isEnglish ? 'Previous illustration' : 'Illustrazione precedente'" @click="goPrev">
           <img src="/icone/icon-prev.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
 
@@ -160,53 +212,56 @@ watch(() => route.params.id, fetchIllustration)
           <img :src="illustration.img" :alt="altText" class="stage-img block w-auto max-w-full" loading="eager" />
         </div>
 
-        <button class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
+        <button
+          class="nav w-12 h-12 bg-transparent inline-flex items-center justify-center transition
                  hover:bg-black/5 dark:hover:bg-white/10 hover:scale-105 active:scale-95
-                 focus-visible:outline  focus-visible:outline-[var(--color-accent)]
-                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent" type="button"
-          :disabled="currentIndex === orderedIds.length - 1" aria-label="Illustrazione successiva"
-          title="Illustrazione successiva" @click="goNext">
+                 focus-visible:outline focus-visible:outline-[var(--color-accent)]
+                 disabled:opacity-35 disabled:hover:scale-100 disabled:hover:bg-transparent cursor-pointer disabled:cursor-not-allowed"
+          type="button" :disabled="currentIndex === orderedIds.length - 1"
+          :aria-label="isEnglish ? 'Next illustration' : 'Illustrazione successiva'"
+          :title="isEnglish ? 'Next illustration' : 'Illustrazione successiva'" @click="goNext">
           <img src="/icone/icon-next.svg" alt="" aria-hidden="true" class="icon w-6 h-6 block pointer-events-none" />
         </button>
       </section>
 
-      <section class="meta grid gap-[72px] mt-4" aria-label="Scheda tecnica dell'opera">
+      <section class="meta grid gap-[72px] mt-4"
+        :aria-label="isEnglish ? 'Artwork technical sheet' : 'Scheda tecnica dell\'opera'">
         <div class="col">
           <dl class="meta-list">
-            <dt v-if="illustration.year" class="meta-label">Data</dt>
+            <dt v-if="illustration.year" class="meta-label">{{ isEnglish ? 'Date' : 'Data' }}</dt>
             <dd v-if="illustration.year">
               <p>{{ illustration.year }}</p>
             </dd>
 
-            <dt class="meta-label">Tipo di progetto</dt>
+            <dt class="meta-label">{{ isEnglish ? 'Project Type' : 'Tipo di progetto' }}</dt>
             <dd>
               <p>
                 <span class="pill" :style="pillStyle">
-                  {{ currentCategory }}
+                  {{ displayCategory }}
                 </span>
               </p>
             </dd>
 
-            <dt v-if="illustration.tag?.length" class="meta-label">Tag</dt>
-            <dd v-if="illustration.tag?.length">
-              <ul class="tags" aria-label="Tag dell’illustrazione">
-                <li v-for="t in illustration.tag" :key="t" class="pill" :style="pillStyle">
+            <dt v-if="displayTags.length" class="meta-label">{{ isEnglish ? 'Tags' : 'Tag' }}</dt>
+            <dd v-if="displayTags.length">
+              <ul class="tags" :aria-label="isEnglish ? 'Illustration tags' : 'Tag dell’illustrazione'">
+                <li v-for="t in displayTags" :key="t" class="pill" :style="pillStyle">
                   {{ t }}
                 </li>
               </ul>
             </dd>
 
-            <dt v-if="illustration.tools" class="meta-label">Tecnica (Tools)</dt>
-            <dd v-if="illustration.tools">
-              <p>{{ illustration.tools }}</p>
+            <dt v-if="displayTools" class="meta-label">{{ isEnglish ? 'Medium & Tools' : 'Tecnica (Tools)' }}</dt>
+            <dd v-if="displayTools">
+              <p>{{ displayTools }}</p>
             </dd>
           </dl>
         </div>
 
         <div class="col">
-          <h2 class="meta-label">Descrizione</h2>
-          <p v-if="illustration.description" class="desc">
-            {{ illustration.description }}
+          <h2 class="meta-label">{{ isEnglish ? 'Description' : 'Descrizione' }}</h2>
+          <p v-if="displayDescription" class="desc">
+            {{ displayDescription }}
           </p>
         </div>
       </section>
@@ -308,7 +363,7 @@ watch(() => route.params.id, fetchIllustration)
   font-family: var(--font-heading);
   font-style: normal;
   font-weight: 700;
-  color: var(--color-accent)
+  color: var(--color-accent);
 }
 
 .desc,
