@@ -25,7 +25,7 @@ onMounted(() => {
 
 /* ==========================================================================
    Configurazione Categorie e Colori
-   ========================================================================== */
+   ========================================================================= */
 const CATEGORY_COLORS = {
   'Motion Graphics': { bg: '#fff3bf', bd: '#ffd43b', fg: '#7a5b00' },
   'Web Design': { bg: '#e7f5ff', bd: '#74c0fc', fg: '#1c4f80' },
@@ -124,10 +124,13 @@ async function getProjects() {
   try {
     const q = query(collection(db, 'projects'), orderBy('order', 'asc'))
     const snap = await getDocs(q)
-    rawProjects.value = snap.docs.map(d => ({
-      firestoreId: d.id,
-      ...(d.data() || {})
-    }))
+    rawProjects.value = snap.docs
+      .map(d => ({
+        firestoreId: d.id,
+        ...(d.data() || {})
+      }))
+      // Esclude i progetti bozza (nasconde solo se published è esplicitamente false)
+      .filter(p => p.published !== false)
   } catch (e) {
     error.value = isEnglish.value ? 'Unable to load projects.' : 'Impossibile caricare i progetti.'
   } finally {
