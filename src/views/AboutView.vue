@@ -60,6 +60,11 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
             Within this portfolio, you can explore a curated selection of the most significant and representative works
             from my creative and professional path.
           </p>
+
+          <p>
+            Since October 2026, I have been working as a social media manager for the Youth Plan of the Bassa Valsugana
+            and Tesino area.
+          </p>
         </template>
 
         <!-- Contenuto in Italiano -->
@@ -79,12 +84,17 @@ window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
             progettazione digitale, dal design di siti web e applicazioni, alla motion graphic, fino alla creazione di
             identità visive e strategie di comunicazione multimediale.
           </p>
-
+        
           <p>
             In ogni progetto cerco di coniugare <strong>creatività</strong>, <strong>funzionalità</strong> e
             <strong>accessibilità</strong> dando vita a soluzioni visive efficaci e coerenti con il contesto.<br />
             All'interno di questo sito portfolio, potrai esplorare una selezione dei lavori più significativi e
             rappresentativi della mia produzione creativa e professionale.
+          </p>
+
+          <p>
+            Da ottobre 2026 lavoro come social media manager per il Piano Giovani di Zona della Bassa Valsugana e
+            Tesino.
           </p>
         </template>
 
